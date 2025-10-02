@@ -463,11 +463,22 @@ const modifier = (text) => {
     modifiedText = text; // Keep original text with parentheses for debugging
   } else {
     // Strip all (((...))), ((...)) and (...) from the text for normal mode
-    // But preserve any remaining command parentheses that weren't removed above
-    modifiedText = modifiedText.replace(/\(\(\(([^()]+?)\)\)\)/g, '$1');
-    modifiedText = modifiedText.replace(/\(\(([^()]+?)\)\)/g, '$1');
-    // Only strip single parentheses that are NOT sleep/advance commands
-    modifiedText = modifiedText.replace(/\((?!(?:sleep|advance)[^)]*\))([^)]+?)\)/g, '$1');
+    // Use non-greedy matching that handles nested content properly
+    
+    // First pass: Remove triple parentheses descriptions (((entity) description)))
+    // This regex matches from ((( to the last ))) in the sequence
+    modifiedText = modifiedText.replace(/\(\(\(.*?\)\)\)/gs, function(match) {
+      // Extract just the entity name before the first closing paren
+      const innerMatch = match.match(/\(\(\(([^)]+?)\)/);
+      return innerMatch ? innerMatch[1] : '';
+    });
+    
+    // Second pass: Remove double parentheses locations ((Location))
+    modifiedText = modifiedText.replace(/\(\(([^)]+?)\)\)/g, '$1');
+    
+    // Third pass: Remove single parentheses characters (Character)
+    // But preserve sleep/advance commands
+    modifiedText = modifiedText.replace(/\((?!(?:sleep|advance)\s)([^)]+?)\)/g, '$1');
   }
 
   // Process any existing turn time marker in the text
