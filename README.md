@@ -55,6 +55,7 @@ The regular version of WTG 2.0 was tested primarly using Deepseek v3.1, so this 
 - Just time tracking, nothing else
 - No AI prompt interference
 - Predictable, consistent behavior
+- Recommended for free users
 
 **Performance**
 - Minimal overhead
@@ -425,4 +426,5 @@ This is a community-created tool for enhancing AI Dungeon experiences. Not offic
 ---
 
 **Made for the AI Dungeon community**
+
 
