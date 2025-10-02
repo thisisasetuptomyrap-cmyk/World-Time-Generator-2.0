@@ -34,7 +34,7 @@ The World Time Generator (WTG) is a comprehensive scripting system for AI Dungeo
 
 **Overview**
 
-The regular version of WTG 2.0 was tested primarly using Deepseek v3.1, so this script performs best with that model. The lightweight model is primarly for llama and other smaller models, as they have a hard time doing instruction following. Mixtral models can also work with the normal wtg scripts, but I haven't done rigorous testing with those models.
+The regular version of WTG 2.0 was tested primarly using Deepseek v3.1, so this script performs best with that model. The lightweight script is primarly for llama and other smaller models, as they have a hard time with instruction following. Mistral models can also work with the normal wtg scripts, but I haven't done enough rigorous testing to fully reccomend the use of them.
 
 The Scenario version is just a convient way for mobile users to switch between either script. 
 
@@ -551,4 +551,5 @@ This is a community-created tool for enhancing AI Dungeon experiences. Not offic
 ---
 
 **Made for the AI Dungeon community**
+
 
