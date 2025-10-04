@@ -24,14 +24,107 @@ const modifier = (text) => {
     }
   }
 
+  // AI COMMAND EXTRACTION - Check for (sleep) or (advance) commands
+  let timeAdjustedByCommand = false;
+  if (getWTGBooleanSetting("Enable Dynamic Time")) {
+    const commandRegex = /^\s*\((sleep|advance)\s+(\d+)\s+(\w+)\)\s*/;
+    const commandMatch = modifiedText.match(commandRegex);
+    if (commandMatch) {
+      const verb = commandMatch[1];
+      const amount = parseInt(commandMatch[2], 10);
+      const unit = commandMatch[3].toLowerCase();
+      const fullCommand = commandMatch[0].trim();
+
+      // Check if cooldown is active before processing command
+      let shouldProcessCommand = true;
+      if (verb === 'sleep' && isSleepCooldownActive()) {
+        shouldProcessCommand = false;
+      } else if (verb === 'advance' && isAdvanceCooldownActive()) {
+        shouldProcessCommand = false;
+      }
+
+      // Only process command if no active cooldown
+      if (shouldProcessCommand) {
+        // Convert to days, hours, minutes
+        let days = 0, hours = 0, minutes = 0;
+        switch (unit) {
+          case 'years':
+          case 'year':
+            days = amount * 365;
+            break;
+          case 'months':
+          case 'month':
+            days = amount * 30;
+            break;
+          case 'weeks':
+          case 'week':
+            days = amount * 7;
+            break;
+          case 'days':
+          case 'day':
+            days = amount;
+            break;
+          case 'hours':
+          case 'hour':
+            hours = amount;
+            break;
+          case 'minutes':
+          case 'minute':
+            minutes = amount;
+            break;
+          default:
+            break;
+        }
+
+        // Apply the time jump if we have valid values
+        if (days > 0 || hours > 0 || minutes > 0) {
+          state.turnTime = addToTurnTime(state.turnTime, { days, hours, minutes });
+          const { currentDate, currentTime } = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
+          state.currentDate = currentDate;
+          state.currentTime = currentTime;
+          state.changed = true;
+          timeAdjustedByCommand = true;
+
+          // Set cooldown
+          if (verb === 'sleep') {
+            setSleepCooldown({hours: 8});
+          } else if (verb === 'advance') {
+            setAdvanceCooldown({minutes: 5});
+          }
+        }
+      }
+
+      // Remove command from output if not in debug mode OR if on cooldown
+      if (!shouldProcessCommand || !getWTGBooleanSetting("Debug Mode")) {
+        modifiedText = modifiedText.replace(commandRegex, '').trim();
+      }
+    }
+
+    // Final sanitation: remove any remaining commands
+    const shouldRemoveAllCommands = isSleepCooldownActive() || isAdvanceCooldownActive() || !getWTGBooleanSetting("Debug Mode");
+    if (shouldRemoveAllCommands) {
+      modifiedText = modifiedText
+        .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+  }
+
   // Process any existing turn time marker in the text
   const ttMatch = modifiedText.match(/\[\[(.*?)\]\]$/);
   let parsedTT = ttMatch ? parseTurnTime(ttMatch[1]) : null;
   let narrative = ttMatch ? modifiedText.replace(/\[\[.*\]\]$/, '').trim() : modifiedText.trim();
   let charCount = narrative.length;
 
-  // Calculate minutes to add based on character count (fixed rate: 1 minute per 700 characters)
-  let minutesToAdd = Math.floor(charCount / 700);
+  // Calculate minutes to add based on character count
+  let minutesToAdd;
+  if (getWTGBooleanSetting("Enable Dynamic Time")) {
+    const turnText = (lastAction ? lastAction.text : '') + ' ' + narrative;
+    const dynamicFactor = getDynamicTimeFactor(turnText);
+    minutesToAdd = Math.floor((charCount / 700) * dynamicFactor);
+  } else {
+    minutesToAdd = Math.floor(charCount / 700);
+  }
 
   // Add warning if AI altered turn time metadata
   if (parsedTT) {
@@ -41,8 +134,8 @@ const modifier = (text) => {
     }
   }
 
-  // Update turn time based on character count if starting time is not descriptive
-  if (state.startingTime !== 'Unknown' && minutesToAdd > 0) {
+  // Update turn time based on character count if starting time is not descriptive and no command was processed
+  if (!timeAdjustedByCommand && state.startingTime !== 'Unknown' && minutesToAdd > 0) {
     state.turnTime = addToTurnTime(state.turnTime, {minutes: minutesToAdd});
     const {currentDate, currentTime} = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
     state.currentDate = currentDate;
@@ -80,7 +173,7 @@ const modifier = (text) => {
   // Add turn data to WTG Data storycard if we found a player action and it's not a continue
   if (lastAction && actionType !== "continue") {
     const timestamp = formatTurnTime(state.turnTime);
-    addTurnData(actionType, lastAction.text, timestamp);
+    addTurnData(actionType, lastAction.text, narrative, timestamp);
   }
 
   // Update the Current Date and Time storycard if needed
