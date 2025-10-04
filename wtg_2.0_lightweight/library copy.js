@@ -373,13 +373,14 @@ function getTurnData() {
   const dataCard = getWTGDataCard();
   if (!dataCard.entry) return [];
 
-  const turnDataRegex = /\[Turn Data\]\nAction Type: (.*?)\nAction Text: (.*?)\nTimestamp: (.*?)\n\[\/Turn Data\]/gs;
+  const turnDataRegex = /\[Turn Data\]\nAction Type: (.*?)\nAction Text: (.*?)\nResponse Text: (.*?)\nTimestamp: (.*?)\n\[\/Turn Data\]/gs;
   const matches = [...dataCard.entry.matchAll(turnDataRegex)];
 
   return matches.map(match => ({
     actionType: match[1],
     actionText: match[2],
-    timestamp: match[3]
+    responseText: match[3],
+    timestamp: match[4]
   }));
 }
 
@@ -387,14 +388,16 @@ function getTurnData() {
  * Add turn data to WTG Data storycard (simplified for lightweight version)
  * @param {string} actionType - Type of action (do, say, story, continue)
  * @param {string} actionText - Full text of action
+ * @param {string} responseText - AI response text
  * @param {string} timestamp - Timestamp in turntime format
  */
-function addTurnData(actionType, actionText, timestamp) {
+function addTurnData(actionType, actionText, responseText, timestamp) {
   const dataCard = getWTGDataCard();
 
   const turnDataEntry = `[Turn Data]
 Action Type: ${actionType}
 Action Text: ${actionText}
+Response Text: ${responseText || ''}
 Timestamp: ${timestamp}
 [/Turn Data]`;
 
@@ -413,14 +416,14 @@ function cleanupWTGDataCardByTimestamp(currentTT) {
   const dataCard = getWTGDataCard();
   if (!dataCard.entry) return;
 
-  const turnDataRegex = /\[Turn Data\]\nAction Type: (.*?)\nAction Text: (.*?)\nTimestamp: (.*?)\n\[\/Turn Data\]/gs;
+  const turnDataRegex = /\[Turn Data\]\nAction Type: (.*?)\nAction Text: (.*?)\nResponse Text: (.*?)\nTimestamp: (.*?)\n\[\/Turn Data\]/gs;
   const matches = [...dataCard.entry.matchAll(turnDataRegex)];
 
   // Keep only entries with timestamps less than or equal to current time
   let newEntry = "";
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
-    const entryTT = parseTurnTime(match[3]);
+    const entryTT = parseTurnTime(match[4]);
 
     // Skip entries with invalid timestamps
     if (!entryTT) continue;
@@ -430,7 +433,8 @@ function cleanupWTGDataCardByTimestamp(currentTT) {
       const turnDataEntry = `[Turn Data]
 Action Type: ${match[1]}
 Action Text: ${match[2]}
-Timestamp: ${match[3]}
+Response Text: ${match[3]}
+Timestamp: ${match[4]}
 [/Turn Data]`;
 
       if (newEntry) {
@@ -652,7 +656,7 @@ function updateAllStoryCardTimestamps(newDate, newTime) {
     const card = storyCards[i];
 
     // Skip system cards
-    if (card.title === "WTG Data" || card.title === "Current Date and Time") {
+    if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings") {
       continue;
     }
 
@@ -667,4 +671,189 @@ function updateAllStoryCardTimestamps(newDate, newTime) {
       }
     }
   }
+}
+
+/**
+ * Extract keywords from text
+ * @param {string} text - Text to process
+ * @returns {Array} Array of keywords
+ */
+function extractKeywords(text) {
+  // Simple keyword extraction - in a real implementation, this could be more sophisticated
+  const words = text.split(/\s+/);
+  const keywords = [];
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i].replace(/[^\w]/g, '').toLowerCase();
+    if (word.length > 3 && !/^\d+$/.test(word)) {
+      keywords.push(word);
+    }
+  }
+  return [...new Set(keywords)]; // Remove duplicates
+}
+
+/**
+ * Calculate keyword similarity between two arrays
+ * @param {Array} keywords1 - First array of keywords
+ * @param {Array} keywords2 - Second array of keywords
+ * @returns {number} Similarity score (0-1)
+ */
+function calculateKeywordSimilarity(keywords1, keywords2) {
+  if (keywords1.length === 0 || keywords2.length === 0) return 0;
+  
+  const set1 = new Set(keywords1);
+  const set2 = new Set(keywords2);
+  const intersection = [...set1].filter(x => set2.has(x));
+  const union = [...new Set([...set1, ...set2])];
+  
+  return intersection.length / union.length;
+}
+
+/**
+ * Get or create WTG Settings storycard
+ * @returns {Object} WTG Settings storycard
+ */
+function getWTGSettingsCard() {
+  let settingsCard = storyCards.find(card => card.title === "World Time Generator Settings");
+  if (!settingsCard) {
+    addStoryCard("World Time Generator Settings");
+    settingsCard = storyCards[storyCards.length - 1];
+    settingsCard.type = "system";
+    settingsCard.keys = ""; // No keys - not included in AI context
+    settingsCard.description = "World Time Generator Settings - Edit the values below to configure the system.";
+    settingsCard.entry = `Enable Dynamic Time: false
+Debug Mode: false`;
+  } else {
+    // Ensure keys are always empty
+    settingsCard.keys = "";
+  }
+  return settingsCard;
+}
+
+/**
+ * Get or create the WTG Cooldowns storycard
+ * @returns {Object} WTG Cooldowns storycard
+ */
+function getCooldownCard() {
+  let cooldownCard = storyCards.find(card => card.title === "WTG Cooldowns");
+  if (!cooldownCard) {
+    addStoryCard("WTG Cooldowns");
+    cooldownCard = storyCards[storyCards.length - 1];
+    cooldownCard.type = "system";
+    cooldownCard.keys = ""; // Empty keys so it's not included in context
+    cooldownCard.description = "Internal cooldown tracking for AI commands; no keys; not included in context";
+  }
+  return cooldownCard;
+}
+
+/**
+ * Check if sleep command cooldown is active
+ * @returns {boolean} True if sleep cooldown is active
+ */
+function isSleepCooldownActive() {
+  if (!state.sleepAvailableAtTT || !state.turnTime) return false;
+  const currentTT = state.turnTime;
+  const availableTT = parseTurnTime(state.sleepAvailableAtTT);
+  if (!availableTT) return false;
+  return compareTurnTime(currentTT, availableTT) < 0;
+}
+
+/**
+ * Check if advance command cooldown is active
+ * @returns {boolean} True if advance cooldown is active
+ */
+function isAdvanceCooldownActive() {
+  if (!state.advanceAvailableAtTT || !state.turnTime) return false;
+  const currentTT = state.turnTime;
+  const availableTT = parseTurnTime(state.advanceAvailableAtTT);
+  if (!availableTT) return false;
+  return compareTurnTime(currentTT, availableTT) < 0;
+}
+
+/**
+ * Set sleep command cooldown
+ * @param {Object} duration - Duration object with time units (e.g., {hours: 8})
+ */
+function setSleepCooldown(duration) {
+  const availableTT = addToTurnTime(state.turnTime, duration);
+  state.sleepAvailableAtTT = formatTurnTime(availableTT);
+  state.sleepWakeTime = formatTurnTime(availableTT);
+  updateCooldownCard();
+}
+
+/**
+ * Set advance command cooldown
+ * @param {Object} duration - Duration object with time units (e.g., {minutes: 5})
+ */
+function setAdvanceCooldown(duration) {
+  const availableTT = addToTurnTime(state.turnTime, duration);
+  state.advanceAvailableAtTT = formatTurnTime(availableTT);
+  state.advanceEndTime = formatTurnTime(availableTT);
+  updateCooldownCard();
+}
+
+/**
+ * Clear all command cooldowns
+ * @param {string} source - Source of the reset (for logging)
+ */
+function clearCommandCooldowns(source) {
+  state.sleepAvailableAtTT = null;
+  state.advanceAvailableAtTT = null;
+  state.sleepWakeTime = null;
+  state.advanceEndTime = null;
+  updateCooldownCard();
+}
+
+/**
+ * Update the WTG Cooldowns storycard with current cooldown information
+ */
+function updateCooldownCard() {
+  const cooldownCard = getCooldownCard();
+  let entry = "";
+
+  if (state.sleepAvailableAtTT) {
+    const sleepTT = parseTurnTime(state.sleepAvailableAtTT);
+    const {currentDate: sleepDate, currentTime: sleepTime} = computeCurrent(state.startingDate, state.startingTime, sleepTT);
+    entry += `Sleep available after: ${sleepDate} ${sleepTime}\n`;
+  }
+
+  if (state.advanceAvailableAtTT) {
+    const advanceTT = parseTurnTime(state.advanceAvailableAtTT);
+    const {currentDate: advanceDate, currentTime: advanceTime} = computeCurrent(state.startingDate, state.startingTime, advanceTT);
+    entry += `Advance available after: ${advanceDate} ${advanceTime}\n`;
+  }
+
+  cooldownCard.entry = entry.trim();
+}
+
+/**
+ * Get a boolean setting from the WTG Settings card
+ * @param {string} settingName - Name of the setting to retrieve
+ * @returns {boolean} The boolean value of the setting, or false if not found
+ */
+function getWTGBooleanSetting(settingName) {
+  const settingsCard = getWTGSettingsCard();
+  if (!settingsCard || !settingsCard.entry) return false;
+
+  const regex = new RegExp(`${settingName}:\\s*(true|false)`, 'i');
+  const match = settingsCard.entry.match(regex);
+  return match ? match[1].toLowerCase() === 'true' : false;
+}
+
+/**
+ * Get dynamic time factor based on turn content analysis
+ * @param {string} turnText - Text from player input and AI response
+ * @returns {number} Time factor (0.7 for quick turns, 1.3 for long turns, 1.0 for medium/default)
+ */
+function getDynamicTimeFactor(turnText) {
+  const lowerText = turnText.toLowerCase();
+  // Quick turns (dialogue, immediate actions)
+  if (lowerText.match(/\b(say|ask|talk|whisper|reply|speak|chat|converse)\b/)) {
+    return 0.7; // Time passes slower
+  }
+  // Long turns (travel, waiting, extended events)
+  if (lowerText.match(/\b(journey|travel|wait|sleep|days|hours|walk|ride|sail)\b/)) {
+    return 1.3; // Time passes faster
+  }
+  // Medium/default turns
+  return 1.0;
 }
