@@ -38,12 +38,13 @@ const modifier = (text) => {
       state.currentTime = "8:00 AM";
       messages.push(`[You go to sleep and wake up the next morning on ${state.currentDate}.]`);
     }
-    state.insertMarker = true;
-    state.changed = true;
-    modifiedText = '';
-  }
-  // Handle bracketed commands
-  else {
+      state.insertMarker = true;
+      state.changed = true;
+      setSleepCooldown({hours: 8});
+      modifiedText = '';
+    }
+    // Handle bracketed commands
+    else {
     let trimmedText = text.trim();
     if (trimmedText.match(/^\[(.+?)\]$/)) {
       const commandStr = trimmedText.match(/^\[(.+?)\]$/)[1].trim().toLowerCase();
@@ -72,6 +73,9 @@ const modifier = (text) => {
 
             // Update timestamps in all existing storycards to reflect the new time
             updateAllStoryCardTimestamps(state.currentDate, state.currentTime);
+
+            // Clear cooldowns when time is reset
+            clearCommandCooldowns("settime command");
 
             messages.push(`[Starting date and time set to ${state.startingDate} ${state.startingTime}.]`);
             state.insertMarker = true;
@@ -103,6 +107,7 @@ const modifier = (text) => {
           messages.push(`[Advanced ${amount} ${unit}. New date/time: ${state.currentDate} ${state.currentTime}.]`);
           state.insertMarker = true;
           state.changed = true;
+          setAdvanceCooldown({minutes: 5});
         }
       } else if (command === 'reset') {
         let newDate = getCurrentDateFromHistory('', true);
@@ -123,6 +128,9 @@ const modifier = (text) => {
 
             // Update timestamps in all existing storycards to reflect the reset time
             updateAllStoryCardTimestamps(state.currentDate, state.currentTime);
+
+            // Clear cooldowns when time is reset
+            clearCommandCooldowns("reset command");
 
             valid = true;
           }
