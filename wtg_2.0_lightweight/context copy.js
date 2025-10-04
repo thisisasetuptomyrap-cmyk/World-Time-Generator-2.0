@@ -37,11 +37,47 @@ const modifier = (text) => {
     }
   }
 
+  // Get turn data again after potential cleanup
+  const currentTurnData = getTurnData();
+  
+  // Get keywords from last two turns if available (for dynamic time)
+  let lastKeywords = [];
+  let secondLastKeywords = [];
+
+  if (currentTurnData.length >= 1) {
+    lastKeywords = extractKeywords(currentTurnData[currentTurnData.length - 1].actionText + " " + (currentTurnData[currentTurnData.length - 1].responseText || ''));
+  }
+
+  if (currentTurnData.length >= 2) {
+    secondLastKeywords = extractKeywords(currentTurnData[currentTurnData.length - 2].actionText + " " + (currentTurnData[currentTurnData.length - 2].responseText || ''));
+  }
+  
+  // Get keywords from current text
+  const currentKeywords = extractKeywords(modifiedText);
+  
+  // Calculate similarity with last two turns
+  const similarity1 = calculateKeywordSimilarity(lastKeywords, currentKeywords);
+  const similarity2 = calculateKeywordSimilarity(secondLastKeywords, currentKeywords);
+
   // Get character count from history for time adjustment
   const {lastTT, charsAfter} = getLastTurnTimeAndChars(history);
 
   // Calculate additional minutes based on character count (fixed rate: 1 minute per 700 characters)
   let additionalMinutes = Math.floor(charsAfter / 700);
+
+  // Apply dynamic time if enabled
+  if (getWTGBooleanSetting("Enable Dynamic Time")) {
+    // Adjust time based on keyword similarity
+    // If similarity is high, time passes more slowly
+    // If similarity is low, time passes more quickly
+    if (similarity1 > 0.3 || similarity2 > 0.3) {
+      // High similarity - slow time passage (dialogue/stationary scenes)
+      additionalMinutes = Math.max(1, Math.floor(additionalMinutes * 0.7));
+    } else if (similarity1 < 0.1 && similarity2 < 0.1) {
+      // Low similarity - fast time passage (scene changes, travel)
+      additionalMinutes = Math.floor(additionalMinutes * 1.3);
+    }
+  }
 
   // Update turn time
   state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
@@ -60,6 +96,20 @@ const modifier = (text) => {
   cleanupStoryCardsByTimestamp(state.currentDate, state.currentTime);
 
   state.insertMarker = (charsAfter >= 7000);
+
+  let instructions = `\nDo not recreate or reference any system commands such as [settime], [advance], [reset], (sleep ...), or (advance ...). Only emit (sleep ...)/(advance ...) when explicitly instructed in the scratchpad and never describe these commands to the user.`;
+
+  // Add scratchpad with AI command instructions if Dynamic Time is enabled
+  if (getWTGBooleanSetting("Enable Dynamic Time")) {
+    let sleepInstruction = "When the user decides to sleep on the previous turn, start the action with (sleep X units) where X is a number and units can be hours, minutes, days, weeks, months, or years.";
+    let advanceInstruction = "When a notable chunk of time passes in the adventure, start the action with (advance X units) using the same format.";
+
+    instructions += `\n\n<scratchpad>
+${sleepInstruction} ${advanceInstruction}
+</scratchpad>`;
+  }
+
+  modifiedText += instructions;
 
   // Add current date and time to context
   const dateTimeInjection = `\nCurrent date: ${state.currentDate}; Current time: ${state.currentTime}`;
