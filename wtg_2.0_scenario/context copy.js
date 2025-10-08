@@ -43,17 +43,41 @@ const modifier = (text) => {
     // Get character count from history for time adjustment
     const {lastTT, charsAfter} = getLastTurnTimeAndChars(history);
 
-    // Calculate additional minutes based on character count (fixed rate: 1 minute per 700 characters)
-    let additionalMinutes = Math.floor(charsAfter / 700);
+    // Check if lastTT came from the most recent action (which would be from a user command)
+    let useLastTTDirectly = false;
+    if (history.length > 0) {
+      const lastActionText = history[history.length - 1].text;
+      if (lastActionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/)) {
+        useLastTTDirectly = true;
+      }
+    }
 
-    // Update turn time
-    state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
-    const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
-    state.currentDate = currentDate;
-    state.currentTime = currentTime;
+    let additionalMinutes = 0;
 
-    if (additionalMinutes > 0) {
+    if (useLastTTDirectly) {
+      // User command provided exact timestamp - use it without modification
+      state.turnTime = lastTT;
+      const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+      state.currentDate = currentDate;
+      state.currentTime = currentTime;
       state.changed = true;
+    } else {
+      // Calculate additional minutes based on character count (fixed rate: 1 minute per 700 characters)
+      additionalMinutes = Math.floor(charsAfter / 700);
+
+      // Update turn time
+      if (additionalMinutes > 0) {
+        state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
+        const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+        state.currentDate = currentDate;
+        state.currentTime = currentTime;
+        state.changed = true;
+      } else {
+        state.turnTime = lastTT;
+        const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+        state.currentDate = currentDate;
+        state.currentTime = currentTime;
+      }
     }
 
     // Clean up WTG Data card by removing entries with timestamps higher than current turn time
@@ -140,35 +164,59 @@ const modifier = (text) => {
   
   // Get character count from history for time adjustment
   const {lastTT, charsAfter} = getLastTurnTimeAndChars(history);
-  
-  // Get time duration multiplier from WTG Settings storycard
-  let timeMultiplier = 1.0;
-  const settingsCard = getWTGSettingsCard();
-  if (settingsCard && settingsCard.entry) {
-    const multiplierMatch = settingsCard.entry.match(/Time Duration Multiplier: ([\d.]+)/);
-    if (multiplierMatch) {
-      timeMultiplier = Math.max(0, parseFloat(multiplierMatch[1]) || 1.0);
+
+  // Check if lastTT came from the most recent action (which would be from a user command)
+  let useLastTTDirectly = false;
+  if (history.length > 0) {
+    const lastActionText = history[history.length - 1].text;
+    if (lastActionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/)) {
+      useLastTTDirectly = true;
     }
   }
-  
-  // Calculate additional minutes based on character count and time multiplier
-  let additionalMinutes = Math.floor((charsAfter / 700) * timeMultiplier);
-  
-  // Adjust time based on keyword similarity
-  if (similarity1 > 0.3 || similarity2 > 0.3) {
-    additionalMinutes = Math.max(1, Math.floor(additionalMinutes * 0.7));
-  } else if (similarity1 < 0.1 && similarity2 < 0.1) {
-    additionalMinutes = Math.floor(additionalMinutes * 1.3);
-  }
-  
-  // Update turn time
-  state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
-  const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
-  state.currentDate = currentDate;
-  state.currentTime = currentTime;
-  
-  if (additionalMinutes > 0) {
+
+  let additionalMinutes = 0;
+
+  if (useLastTTDirectly) {
+    // User command provided exact timestamp - use it without modification
+    state.turnTime = lastTT;
+    const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+    state.currentDate = currentDate;
+    state.currentTime = currentTime;
     state.changed = true;
+  } else {
+    // Get time duration multiplier from WTG Settings storycard
+    let timeMultiplier = 1.0;
+    const settingsCard = getWTGSettingsCard();
+    if (settingsCard && settingsCard.entry) {
+      const multiplierMatch = settingsCard.entry.match(/Time Duration Multiplier: ([\d.]+)/);
+      if (multiplierMatch) {
+        timeMultiplier = Math.max(0, parseFloat(multiplierMatch[1]) || 1.0);
+      }
+    }
+    
+    // Calculate additional minutes based on character count and time multiplier
+    additionalMinutes = Math.floor((charsAfter / 700) * timeMultiplier);
+    
+    // Adjust time based on keyword similarity
+    if (similarity1 > 0.3 || similarity2 > 0.3) {
+      additionalMinutes = Math.max(1, Math.floor(additionalMinutes * 0.7));
+    } else if (similarity1 < 0.1 && similarity2 < 0.1) {
+      additionalMinutes = Math.floor(additionalMinutes * 1.3);
+    }
+    
+    // Update turn time
+    if (additionalMinutes > 0) {
+      state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
+      const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+      state.currentDate = currentDate;
+      state.currentTime = currentTime;
+      state.changed = true;
+    } else {
+      state.turnTime = lastTT;
+      const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+      state.currentDate = currentDate;
+      state.currentTime = currentTime;
+    }
   }
   
   // Clean up WTG Data card by removing entries with timestamps higher than current turn time
