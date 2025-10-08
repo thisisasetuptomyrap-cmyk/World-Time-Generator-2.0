@@ -1,7 +1,10 @@
-# World Time Generator (WTG) 2.0
+# World Time Generator (WTG) 2.0.1
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
+# Latest version: 2.0.1
+
+Fixed an issue where the time and date storycard wasn't updating after user commands. Thanks to Fluffams on discord for spotting this out.
 ## Table of Contents
 
 - [Overview](#overview)
@@ -551,5 +554,6 @@ This is a community-created tool for enhancing AI Dungeon experiences. Not offic
 ---
 
 **Made for the AI Dungeon community**
+
 
 
