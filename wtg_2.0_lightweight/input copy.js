@@ -30,13 +30,18 @@ const modifier = (text) => {
       state.currentDate = currentDate;
       state.currentTime = currentTime;
       let wakeMessage = (add.days > 0 || state.turnTime.days > 0) ? "the next day" : "later that day";
-      messages.push(`[You go to sleep and wake up ${wakeMessage} on ${state.currentDate} at ${state.currentTime}.]`);
+      const ttMarker = formatTurnTime(state.turnTime);
+      messages.push(`[SYSTEM] You go to sleep and wake up ${wakeMessage} on ${state.currentDate} at ${state.currentTime}. [[${ttMarker}]]`);
     } else {
+      // When time is Unknown, set it to 8:00 AM and reset turn time
+      state.turnTime = {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
       state.turnTime = addToTurnTime(state.turnTime, {days: 1});
+      state.startingTime = "8:00 AM";
       const {currentDate, currentTime} = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
       state.currentDate = currentDate;
-      state.currentTime = "8:00 AM";
-      messages.push(`[You go to sleep and wake up the next morning on ${state.currentDate}.]`);
+      state.currentTime = currentTime;
+      const ttMarker = formatTurnTime(state.turnTime);
+      messages.push(`[SYSTEM] You go to sleep and wake up the next morning on ${state.currentDate} at ${state.currentTime}. [[${ttMarker}]]`);
     }
       state.insertMarker = true;
       state.changed = true;
@@ -77,7 +82,8 @@ const modifier = (text) => {
             // Clear cooldowns when time is reset
             clearCommandCooldowns("settime command");
 
-            messages.push(`[Starting date and time set to ${state.startingDate} ${state.startingTime}.]`);
+            const ttMarker = formatTurnTime(state.turnTime);
+            messages.push(`[SYSTEM] Starting date and time set to ${state.startingDate} ${state.startingTime}. [[${ttMarker}]]`);
             state.insertMarker = true;
             state.changed = true;
           } else {
@@ -104,7 +110,8 @@ const modifier = (text) => {
           const {currentDate, currentTime} = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
           state.currentDate = currentDate;
           state.currentTime = currentTime;
-          messages.push(`[Advanced ${amount} ${unit}. New date/time: ${state.currentDate} ${state.currentTime}.]`);
+          const ttMarker = formatTurnTime(state.turnTime);
+          messages.push(`[SYSTEM] Advanced ${amount} ${unit}. New date/time: ${state.currentDate} ${state.currentTime}. [[${ttMarker}]]`);
           state.insertMarker = true;
           state.changed = true;
           setAdvanceCooldown({minutes: 5});
@@ -136,7 +143,8 @@ const modifier = (text) => {
           }
         }
         if (valid) {
-          messages.push(`[Date and time reset to most recent mention: ${state.currentDate} ${state.currentTime}.]`);
+          const ttMarker = formatTurnTime(state.turnTime);
+          messages.push(`[SYSTEM] Date and time reset to most recent mention: ${state.currentDate} ${state.currentTime}. [[${ttMarker}]]`);
           state.insertMarker = true;
           state.changed = true;
         } else {
