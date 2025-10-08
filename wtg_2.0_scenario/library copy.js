@@ -1089,4 +1089,3 @@ Discovered On: ${match[3]}
   }
   dataCard.entry = newEntry.trim();
 }
-
