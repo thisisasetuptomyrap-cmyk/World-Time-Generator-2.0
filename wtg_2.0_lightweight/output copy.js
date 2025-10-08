@@ -134,7 +134,8 @@ const modifier = (text) => {
     }
   }
 
-  // Update turn time based on character count if starting time is not descriptive and no command was processed
+  // Update turn time based on character count ONLY if no AI command was processed
+  // Note: User commands are handled in context hook via [[turntime]] marker
   if (!timeAdjustedByCommand && state.startingTime !== 'Unknown' && minutesToAdd > 0) {
     state.turnTime = addToTurnTime(state.turnTime, {minutes: minutesToAdd});
     const {currentDate, currentTime} = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
