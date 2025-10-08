@@ -62,11 +62,11 @@ const modifier = (text) => {
       const {currentDate, currentTime} = computeCurrent(state.startingDate, state.startingTime, state.turnTime);
       state.currentDate = currentDate;
       state.currentTime = currentTime;
-      state.changed = true;
-    }
+    state.changed = true;
+  }
 
-    // Update text without turn time marker
-    modifiedText = narrative;
+  // Update text without turn time marker
+  modifiedText = narrative;
 
     // Add timestamps to existing storycards that don't have them
     if (lastAction && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
