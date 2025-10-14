@@ -2,7 +2,7 @@
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
-# Latest version: 2.0.2
+# Latest version: 2.1.23
 
 Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands.
 
