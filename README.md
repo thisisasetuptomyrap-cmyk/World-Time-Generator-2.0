@@ -1,4 +1,4 @@
-# World Time Generator (WTG) 2.0.1
+# World Time Generator (WTG) 2.0
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
