@@ -2,20 +2,20 @@
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
-# Latest version: 2.1.23
+# Latest version: 2.0.2
 
 Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands.
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [System Commands](#system-commands)
 - [Which Version Should I Use?](#which-version-should-i-use)
 - [WTG 2.0 (Full Version)](#wtg-20-full-version)
 - [WTG 2.0 Lightweight](#wtg-20-lightweight)
 - [WTG 2.0 Scenario (Mode Switching)](#wtg-20-scenario-mode-switching)
 - [Installation](#installation)
 - [Quick Start Guide](#quick-start-guide)
-- [Commands Reference](#commands-reference)
 
 ---
 
@@ -31,6 +31,122 @@ The World Time Generator (WTG) is a comprehensive scripting system for AI Dungeo
 - **Adventure Erasing Detection**: Handles time jumps when rewinding story
 - **Turn Data Tracking**: Records adventure history for consistency
 - **Highly Configurable**: Multiple settings to customize behavior (Full version)
+
+---
+
+## System Commands
+
+### Universal Commands (All Versions)
+
+These commands work in all versions of WTG:
+
+#### `[settime mm/dd/yyyy time]`
+**Set starting date and time**
+
+```
+[settime 06/15/2023 8:00 AM]
+[settime 12/25/2024 11:30 PM]
+[settime 01/01/1900 12:00 am]
+```
+
+**NEW: Storycard [settime] Detection (v2.0.2)**
+You can also add `[settime]` directly into any storycard entry! When the scenario starts, the script will automatically detect it, set the time, remove the command from the storycard, and skip the opening prompt.
+
+**Example:**
+```
+[settime 12/25/2024 6:00 am]
+It's Christmas morning in Victorian London...
+```
+
+#### `[advance N unit]`
+**Jump forward in time**
+
+```
+[advance 5 hours]
+[advance 2 days]
+[advance 1 month]
+[advance 3 years]
+```
+**Units:** hours, days, months, years
+
+#### `[sleep]`
+**Sleep to next morning**
+- Advances 6-9 hours + random minutes
+- Automatically sets time to next morning
+
+```
+[sleep]
+```
+
+#### `[reset]`
+**Reset to most recent date/time mentioned in story**
+- Scans recent history for date/time mentions
+- Updates to the most recent found
+
+```
+[reset]
+```
+
+---
+
+### Scenario Version Only
+
+These additional commands are only available in **WTG 2.0 Scenario**:
+
+#### `[normal]`
+**Switch to Normal mode (full features)**
+- Enables AI entity generation
+- Enables AI-driven time commands
+- Enables all configurable settings
+- Enables advanced AI prompt injections
+
+```
+[normal]
+```
+
+#### `[light]`
+**Switch to Lightweight mode**
+- Disables AI entity generation
+- Disables AI prompts
+- Fixed time rate only
+- Manual storycard control
+
+```
+[light]
+```
+
+#### **Combined Commands**
+You can use multiple commands in a single action:
+
+```
+[light] [settime 08/08/2022 6:00 am]    # Set mode + time
+[normal] [advance 2 hours]              # Switch mode + advance time
+```
+
+---
+
+### AI-Generated Commands (Full Version Only)
+
+When **Enable Dynamic Time** is enabled in the Full Version, the AI can trigger time commands:
+
+#### `(sleep N units)`
+**AI initiates sleep**
+```
+AI: You find a bed and (sleep 8 hours)...
+```
+
+#### `(advance N units)`
+**AI advances time during narrative**
+```
+AI: The journey continued and (advance 3 days) later, you arrived...
+```
+
+These commands:
+- Appear at the start of AI responses
+- Are automatically processed by the script
+- Are removed from the output (unless Debug Mode is enabled)
+- Have cooldown periods to prevent spam
+- **Units:** hours, minutes, days, weeks, months, years
 
 ---
 
@@ -376,97 +492,6 @@ After setup:
 - **Mode Display**: Check "Current Date and Time" storycard for current mode
 - **Flexible Switching**: Change modes anytime during your adventure
 
-### NEW: Automatic Storycard [settime] Detection (v2.1.23)
-
-**Pre-configure your scenario's starting time!**
-
-You can now add a `[settime]` command directly into any storycard entry. When the scenario starts, the script will:
-1. Automatically detect and process the command
-2. Set the starting date and time
-3. Remove the command from the storycard
-4. Skip the opening prompt and let the AI respond immediately
-
-**Example:**
-Create a storycard with this entry:
-```
-[settime 12/25/2024 6:00 am]
-It's Christmas morning in Victorian London, and snow blankets the cobblestone streets...
-```
-
-When players start your scenario, the time is automatically set to December 25, 2024 at 6:00 AM, and the AI immediately begins the story without requiring manual commands!
-
-**Works with all versions:**
-- ✅ WTG 2.0 (Full Version)
-- ✅ WTG 2.0 Lightweight
-- ✅ WTG 2.0 Scenario
-- ✅ AutoCards+WTG 2.0
-
----
-
-## Commands Reference
-
-### Universal Commands (Both Versions)
-
-#### `[settime mm/dd/yyyy time]`
-Set starting date and time
-```
-[settime 06/15/2023 8:00 AM]
-[settime 12/25/2024 11:30 PM]
-```
-
-#### `[advance N unit]`
-Jump forward in time
-```
-[advance 5 hours]
-[advance 2 days]
-[advance 1 month]
-```
-Units: hours, days, months, years
-
-#### `[reset]`
-Reset to most recent date/time mentioned in story
-```
-[reset]
-```
-
-#### `[sleep]`
-Sleep to next morning (6-9 hours + random minutes)
-```
-[sleep]
-```
-
-### Scenario Version Only
-
-#### `[light]`
-Switch to Lightweight mode (disables advanced features)
-```
-[light]
-```
-Disables entity generation, AI prompts, settings, and advanced time features.
-
-#### `[normal]`
-Switch to Normal mode (enables all features)
-```
-[normal]
-```
-Enables entity generation, AI prompts, settings, and advanced time features.
-
-#### Combined Commands
-Multiple commands can be used in a single action:
-```
-[light] [settime 08/08/2022 6:00 am]  # Set mode and time together
-[normal] [advance 2 hours]            # Switch mode and advance time
-```
-
-### Full Version Only
-
-The AI can also trigger time commands:
-- `(sleep 8 hours)` - AI initiates sleep
-- `(advance 3 days)` - AI advances time during narrative
-
-These appear at the start of AI responses and are processed automatically.
-
----
 
 ## File Structure
 
