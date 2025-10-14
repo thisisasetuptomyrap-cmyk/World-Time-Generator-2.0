@@ -1,8 +1,8 @@
-# World Time Generator (WTG) 2.0.1
+# World Time Generator (WTG) 2.0
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
-# Latest version: 2.1.23
+# Latest version: 2.0.2
 
 Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands.
 
