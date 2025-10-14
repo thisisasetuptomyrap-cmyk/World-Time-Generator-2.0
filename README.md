@@ -2,7 +2,7 @@
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
-# Latest version: 2.0.2
+# Latest version: 2.1.23
 
 Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands.
 
@@ -49,7 +49,7 @@ These commands work in all versions of WTG:
 [settime 01/01/1900 12:00 am]
 ```
 
-**NEW: Storycard [settime] Detection (v2.0.2)**
+**NEW: Storycard [settime] Detection (v2.1.23)**
 You can also add `[settime]` directly into any storycard entry! When the scenario starts, the script will automatically detect it, set the time, remove the command from the storycard, and skip the opening prompt.
 
 **Example:**
