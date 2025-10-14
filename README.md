@@ -4,7 +4,7 @@
 
 # Latest version: 2.1.23
 
-Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands.
+Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands by simply putting the [settime] command in any storycard within your scenario. The command will automatically be removed from the storycard.
 
 ## Table of Contents
 
