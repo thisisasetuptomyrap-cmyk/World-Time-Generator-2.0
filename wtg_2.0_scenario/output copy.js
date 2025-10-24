@@ -124,13 +124,17 @@ const modifier = (text) => {
         addTimestampToCard(dateTimeCard, `${state.currentDate} ${state.currentTime}`);
       }
 
+      // Combine the player's action and AI's output for keyword detection
+      const combinedText = (lastAction ? lastAction.text : '') + ' ' + modifiedText;
+
       for (let i = 0; i < storyCards.length; i++) {
         const card = storyCards[i];
         // Skip system cards
         if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns") {
           continue;
         }
-        if (card.entry && !hasTimestamp(card)) {
+        // Add timestamp only if card doesn't have one AND its keywords are mentioned in the text
+        if (card.entry && !hasTimestamp(card) && isCardKeywordMentioned(card, combinedText)) {
           addTimestampToCard(card, `${state.currentDate} ${state.currentTime}`);
         }
       }
@@ -525,14 +529,18 @@ const modifier = (text) => {
 
   state.currentTurnTriggers = [];
 
-  // Add timestamps to all storycards that don't have them
+  // Add timestamps to storycards whose keywords are mentioned
   if (lastAction && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+    // Combine the player's action and AI's output for keyword detection
+    const combinedText = (lastAction ? lastAction.text : '') + ' ' + modifiedText;
+
     for (let i = 0; i < storyCards.length; i++) {
       const card = storyCards[i];
       if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns") {
         continue;
       }
-      if (card.entry && !hasTimestamp(card)) {
+      // Add timestamp only if card doesn't have one AND its keywords are mentioned in the text
+      if (card.entry && !hasTimestamp(card) && isCardKeywordMentioned(card, combinedText)) {
         addTimestampToCard(card, `${state.currentDate} ${state.currentTime}`);
       }
     }

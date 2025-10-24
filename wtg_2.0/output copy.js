@@ -782,20 +782,26 @@ const modifier = (text) => {
     const recentHistoryText = history.slice(-5).map(h => h.text).join(' '); // Last 5 actions
     const scanText = fullText + ' ' + recentHistoryText;
 
-    // Get existing character cards
+    // Get existing character cards that don't have timestamps
     const existingCharacterCards = storyCards.filter(c => c.type === "character" && c.title && !hasTimestamp(c));
     const detectedCharacters = extractCharacterNames(scanText);
     for (const card of existingCharacterCards) {
-      if (detectedCharacters.some(name => name.toLowerCase() === card.title.toLowerCase())) {
+      // Only add timestamp if the character name was detected OR if card keywords are mentioned
+      const nameDetected = detectedCharacters.some(name => name.toLowerCase() === card.title.toLowerCase());
+      const keywordMentioned = isCardKeywordMentioned(card, scanText);
+      if (nameDetected || keywordMentioned) {
         addTimestampToCard(card, `${state.currentDate} ${state.currentTime}`);
       }
     }
 
-    // Get existing location cards (use title matching)
+    // Get existing location cards that don't have timestamps
     const existingLocationCards = storyCards.filter(c => (c.type === "location" || c.type === "place") && c.title && !hasTimestamp(c));
     for (const card of existingLocationCards) {
       const lowerTitle = card.title.toLowerCase();
-      if (scanText.toLowerCase().includes(lowerTitle)) {
+      // Only add timestamp if title is mentioned OR if card keywords are mentioned
+      const titleMentioned = scanText.toLowerCase().includes(lowerTitle);
+      const keywordMentioned = isCardKeywordMentioned(card, scanText);
+      if (titleMentioned || keywordMentioned) {
         addTimestampToCard(card, `${state.currentDate} ${state.currentTime}`);
       }
     }

@@ -674,7 +674,36 @@ function addTimestampToCard(card, timestamp, isGenerated = false) {
  * @returns {boolean} True if card has a "Discovered on" timestamp
  */
 function hasTimestamp(card) {
-  return card && card.entry && card.entry.includes("Discovered on");
+  return card && card.entry && (card.entry.includes("Discovered on") || card.entry.includes("Met on") || card.entry.includes("Visited"));
+}
+
+/**
+ * Check if any of a storycard's keywords are mentioned in the given text
+ * @param {Object} card - Storycard to check
+ * @param {string} text - Text to search for keywords
+ * @returns {boolean} True if any keyword from the card is found in the text
+ */
+function isCardKeywordMentioned(card, text) {
+  if (!card || !card.keys || !text) return false;
+  
+  // Normalize text to lowercase for case-insensitive matching
+  const normalizedText = text.toLowerCase();
+  
+  // Split the keys by comma and check each one
+  const keys = card.keys.split(',').map(k => k.trim().toLowerCase());
+  
+  for (const key of keys) {
+    if (!key) continue;
+    
+    // Check if the key appears as a whole word in the text
+    // Use word boundaries to avoid partial matches
+    const keyRegex = new RegExp('\\b' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+    if (keyRegex.test(normalizedText)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
