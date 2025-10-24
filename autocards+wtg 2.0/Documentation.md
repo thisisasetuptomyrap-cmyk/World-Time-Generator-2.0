@@ -1,9 +1,53 @@
 # WTG 2.0 Lightweight + AutoCards Combined System
 
-## Version: 1.0.3 Combined
-Date: 2025-10-14
+## Version: 1.0.4 Combined
+Date: 2025-10-24
 
 ## Version History
+
+### Version 1.0.4 (2025-10-24)
+**Bug Fix: Timestamp Assignment - Keyword Detection**
+
+**Issue Fixed**:
+After using the `[settime]` command or during normal gameplay, all character and location storycards were receiving "discovered/met on" timestamps, even if they were never mentioned in the adventure. This caused storycards to be marked as discovered prematurely, cluttering the game state with cards that hadn't actually been encountered yet.
+
+**Root Cause**:
+In `output.js` (lines 206-218), the system was adding timestamps to ALL storycards that didn't have them, without checking if the storycard's keywords were actually mentioned in the adventure text. This was overly aggressive and didn't respect the intent of discovery-based timestamps.
+
+**Solution Implemented**:
+1. **Added `isCardKeywordMentioned()` Function**: New helper function in `library.js` that checks if any of a storycard's keywords are mentioned in the given text
+   - Uses case-insensitive matching
+   - Checks for whole word matches to avoid partial matches
+   - Splits keywords by comma and tests each one
+
+2. **Updated Timestamp Logic**: Modified `output.js` to only add timestamps when:
+   - The card doesn't already have a timestamp AND
+   - The card's keywords are mentioned in the combined text (player action + AI output)
+
+3. **Combined Text Analysis**: Now analyzes both the player's action and the AI's output together to ensure keywords are actually present before stamping cards
+
+**Code Changes**:
+- **library.js**: Added `isCardKeywordMentioned(card, text)` function (lines 638-665)
+- **output.js**: Updated timestamp assignment logic to use keyword detection (lines 205-221)
+
+**Files Modified**:
+- `library.js`: Added keyword detection function
+- `output.js`: Updated timestamp assignment logic with keyword check
+
+**Impact**:
+- Storycards now only get timestamps when they are actually mentioned in the adventure
+- Prevents premature "discovery" of entities that haven't been encountered yet
+- More accurate tracking of when characters/locations were first introduced
+- Cleaner game state with only relevant cards marked as discovered
+
+**Backup Created**: `Backup/autocards_wtg_2.0_timestamp_fix_2025-10-24/`
+
+**Note**: This same bug was present in all wtg 2.0 variants and has been fixed across the board:
+- `wtg_2.0/` (Backup: `wtg_2.0_timestamp_fix_2025-10-24/`)
+- `wtg_2.0_lightweight/` (Backup: `wtg_2.0_lightweight_timestamp_fix_2025-10-24/`)
+- `wtg_2.0_scenario/` (Backup: `wtg_2.0_scenario_timestamp_fix_2025-10-24/`)
+
+---
 
 ### Version 1.0.3 (2025-10-14)
 **Feature: Automatic Storycard [settime] Detection at Scenario Start**
