@@ -1792,3 +1792,39 @@ function updateAllStoryCardTimestamps(newDate, newTime) {
     }
   }
 }
+
+/**
+ * Check if settime has been initialized (called by user or auto-detected)
+ * @returns {boolean} True if settime has been initialized
+ */
+function hasSettimeBeenInitialized() {
+  // First check state flag
+  if (state.settimeInitialized) {
+    return true;
+  }
+  
+  // Fallback: check WTG Data storycard for settime marker
+  const dataCard = getWTGDataCard();
+  if (dataCard && dataCard.entry && dataCard.entry.includes('[SETTIME_INITIALIZED]')) {
+    state.settimeInitialized = true;
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Mark settime as initialized in both state and WTG Data storycard
+ */
+function markSettimeAsInitialized() {
+  state.settimeInitialized = true;
+  
+  const dataCard = getWTGDataCard();
+  if (dataCard) {
+    if (!dataCard.entry) {
+      dataCard.entry = '[SETTIME_INITIALIZED]';
+    } else if (!dataCard.entry.includes('[SETTIME_INITIALIZED]')) {
+      dataCard.entry = '[SETTIME_INITIALIZED]\n' + dataCard.entry;
+    }
+  }
+}
