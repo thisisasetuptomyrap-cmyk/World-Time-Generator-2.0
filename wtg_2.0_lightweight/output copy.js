@@ -4,7 +4,25 @@ const modifier = (text) => {
   // Ensure state.turnTime is always initialized
   state.turnTime = state.turnTime || {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
 
+  // Initialize mode if not set (default to lightweight)
+  if (!state.wtgMode) {
+    state.wtgMode = 'lightweight';
+  }
+
   let modifiedText = text;
+
+  // Check if WTG is disabled entirely (Normal mode only)
+  if (!isLightweightMode() && getWTGBooleanSetting("Disable WTG Entirely")) {
+    return {text: text};
+  }
+
+  // Sync settime initialization flag from storycard if not set in state
+  if (!state.settimeInitialized) {
+    const dataCard = getWTGDataCard();
+    if (dataCard && dataCard.entry && dataCard.entry.includes('[SETTIME_INITIALIZED]')) {
+      state.settimeInitialized = true;
+    }
+  }
 
   // Check for [settime] command in storycards at scenario start
   if (state.startingDate === '01/01/1900' && info.actionCount <= 1) {
@@ -35,10 +53,16 @@ const modifier = (text) => {
             state.currentTime = currentTime;
             state.changed = true;
 
+            // Mark settime as initialized since we auto-detected it
+            markSettimeAsInitialized();
+
             // Initialize required system storycards
             updateDateTimeCard();
             getWTGSettingsCard();
             getCooldownCard();
+            if (!isLightweightMode()) {
+              getWTGDataCard();
+            }
 
             // Remove the [settime] command from the storycard
             card.entry = card.entry.replace(/\[settime\s+\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}\s+.+?\]/i, '').trim();
@@ -52,10 +76,16 @@ const modifier = (text) => {
     }
   }
 
-  if (state.startingDate === '01/01/1900' && state.startingTime === 'Unknown') {
-    modifiedText = ' Please switch to story mode and use the command, [settime mm/dd/yyyy time] to set a custom starting date and time. (eg: [settime 01/01/1900 12:00 am])\n\nTo report bugs, message me on discord: thedenial. (it has a period at the end of it)';
+  // If settime has NOT been initialized and we're at the start, inject the prompt
+  if (!hasSettimeBeenInitialized() && state.startingDate === '01/01/1900' && state.startingTime === 'Unknown') {
+    modifiedText = ' Please switch to story mode and use the command, [settime mm/dd/yyyy time] to set a custom starting date and time. (eg: [settime 01/01/1900 12:00 am])\n\nTo enable all of the features, use the command [normal]. You can go back to lightweight mode by using the command [light].\n\nLightweight mode is recommended for free users and llama models, as normal mode relies on the model\'s instruction following to generate characters and locations.  \n\nTo report bugs, message me on discord: thedenial. (it has a period at the end of it)';
     return {text: modifiedText};
   }
+
+  // ========================================================================
+  // LIGHTWEIGHT MODE
+  // ========================================================================
+  if (isLightweightMode()) {
 
   // Get the last action from history to determine action type
   let lastAction = null;
@@ -235,6 +265,8 @@ const modifier = (text) => {
   delete state.insertMarker;
 
   return {text: modifiedText};
+  }
+
 };
 
 modifier(text);

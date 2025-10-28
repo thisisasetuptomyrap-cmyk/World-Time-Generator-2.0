@@ -1,9 +1,56 @@
 # WTG 2.0 Scenario Edition - Documentation
 
-## Version: 2.2.3
-Date: 2025-10-14
+## Version: 2.2.4
+Date: 2025-10-28
 
 ## Version History
+
+### Version 2.2.4 (2025-10-28)
+**Feature: Settime Initialization Tracking and Reliable Prompt Injection**
+
+**New Features**:
+1. **Settime Initialization Tracking**: The system now persists whether `[settime]` has been initialized via both `state.settimeInitialized` flag and the `WTG Data` storycard marker `[SETTIME_INITIALIZED]`. This prevents false positives where the default date (01/01/1900) is treated as valid.
+
+2. **Reliable Prompt Injection**: The opening `[settime]` prompt is now reliably injected whenever:
+   - The scenario starts with no prior `[settime]` command detected
+   - The `settime` initialization flag has not been set
+   - The script checks both state and storycard for this information
+
+3. **Auto-Detection with Flag**: When `[settime]` is auto-detected from storycards at scenario start, the system immediately marks it as initialized, preventing the prompt from being shown unnecessarily.
+
+4. **System Message Spacing Fix**: System messages from commands (like `[settime]`) now maintain proper spacing with periods. All messages follow the format: `[SYSTEM] Message text. [[turntime]]`
+
+**How It Works**:
+- **Input Hook**: 
+  - Initializes `state.settimeInitialized = false` at adventure start
+  - When user executes `[settime]` command, calls `markSettimeAsInitialized()`
+  
+- **Output Hook**:
+  - Syncs the flag from storycard if not set in state: `hasSettimeBeenInitialized()`
+  - Auto-detects `[settime]` in storycard entries and marks initialization
+  - Injects prompt only if `!hasSettimeBeenInitialized()` AND time is still default
+  
+- **Library Functions**:
+  - `hasSettimeBeenInitialized()`: Checks state flag first, falls back to storycard
+  - `markSettimeAsInitialized()`: Writes flag to both state and WTG Data storycard
+
+**Benefits**:
+- Prevents false positives where default dates bypass the prompt
+- Ensures prompt appears on scenario start if no settime is configured
+- WTG Data storycard serves as backup persistence for initialization state
+- Works reliably across scenario restarts and mode switches
+
+**Compatibility**:
+Works in both Lightweight and Normal modes.
+
+**Files Modified**:
+- `library copy.js`: Added `hasSettimeBeenInitialized()` and `markSettimeAsInitialized()` helper functions
+- `input copy.js`: Initialize `state.settimeInitialized = false` on adventure start, call `markSettimeAsInitialized()` when processing `[settime]` command
+- `output copy.js`: Sync flag from storycard, mark auto-detected `[settime]`, check initialization flag before injecting prompt
+
+**Backup Created**: `Backup/wtg_2.0_scenario_settime_tracking_2025-10-28/`
+
+---
 
 ### Version 2.2.3 (2025-10-14)
 **Feature: Automatic Storycard [settime] Detection at Scenario Start**

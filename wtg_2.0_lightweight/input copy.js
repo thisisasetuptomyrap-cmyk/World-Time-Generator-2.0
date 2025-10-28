@@ -11,6 +11,10 @@ const modifier = (text) => {
     state.currentDate = '01/01/1900';
     state.currentTime = 'Unknown';
     state.turnTime = {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
+    state.settimeInitialized = false;
+    if (!isLightweightMode()) {
+      state.timeMultiplier = 1.0;
+    }
   }
 
   state.changed = state.changed || false;
@@ -79,13 +83,16 @@ const modifier = (text) => {
             // Update timestamps in all existing storycards to reflect the new time
             updateAllStoryCardTimestamps(state.currentDate, state.currentTime);
 
-            // Clear cooldowns when time is reset
-            clearCommandCooldowns("settime command");
-
             const ttMarker = formatTurnTime(state.turnTime);
             messages.push(`[SYSTEM] Starting date and time set to ${state.startingDate} ${state.startingTime}. [[${ttMarker}]]`);
+            // Mark settime as initialized
+            markSettimeAsInitialized();
             state.insertMarker = true;
             state.changed = true;
+            // Clear any existing AI command cooldowns when user resets time (Normal mode only)
+            if (!isLightweightMode()) {
+              clearCommandCooldowns("user settime command");
+            }
           } else {
             messages.push(`[Invalid date: ${dateStr}. Use mm/dd/yyyy or dd/mm/yyyy.]`);
           }
