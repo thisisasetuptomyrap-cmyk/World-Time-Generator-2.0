@@ -535,7 +535,7 @@ function getLastTurnTimeAndChars(history) {
   let found = false;
   for (let i = history.length - 1; i >= 0; i--) {
     const actionText = history[i].text;
-    const match = actionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/);
+    const match = actionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]/);
     if (match) {
       lastTT = parseTurnTime(match[1]);
       found = true;

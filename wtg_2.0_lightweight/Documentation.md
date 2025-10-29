@@ -1,9 +1,32 @@
 # WTG 2.0 Lightweight Documentation
 
-## Version: 1.0.4
+## Version: 1.0.5
 Date: 2025-10-29
 
 ## Version History
+
+### Version 1.0.5 (2025-10-29)
+**Bug Fix: Back-to-Back Commands Time Addition**
+
+**Issue Fixed**:
+When using two commands back-to-back (e.g., `[sleep]` followed by `[advance]`), the second command was not properly adding time to the first command's result. This was the same bug that affected autocards+wtg 2.0.
+
+**Root Cause**:
+In `library.js` (line 538), the regex pattern had a `$` anchor at the end that prevented matching timestamp markers with trailing characters (like `. `).
+
+**Solution Implemented**:
+Removed the `$` anchor from the regex pattern to allow matching timestamp markers anywhere in the text.
+
+**Files Modified**:
+- `library copy.js`: Fixed regex in `getLastTurnTimeAndChars()` function (line 538)
+
+**Impact**:
+- Back-to-back commands now properly accumulate time
+- Multiple commands in sequence maintain accurate time tracking
+
+**Backup Created**: `Backup/wtg_2.0_lightweight_1.0.5_back_to_back_command_fix_2025-10-29/`
+
+---
 
 ### Version 1.0.4 (2025-10-29)
 **Bug Fix: Missing isLightweightMode Function**
