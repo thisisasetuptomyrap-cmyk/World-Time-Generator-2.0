@@ -1,9 +1,42 @@
 # WTG 2.0 Lightweight Documentation
 
-## Version: 1.0.3
-Date: 2025-10-14
+## Version: 1.0.4
+Date: 2025-10-29
 
 ## Version History
+
+### Version 1.0.4 (2025-10-29)
+**Bug Fix: Missing isLightweightMode Function**
+
+**Issue Fixed**:
+The `isLightweightMode()` function was being called in `output.js` (line 15) and `input.js` (line 15) but was not defined in `library.js`, causing a runtime error: "isLightweightMode is not defined at modifier (<isolated-vm>:1845:3)".
+
+**Root Cause**:
+The function was missing from the library file. While `wtg_2.0_scenario` had the function defined, it was accidentally omitted from `wtg_2.0` and `wtg_2.0_lightweight` library files during development.
+
+**Solution Implemented**:
+Added the missing `isLightweightMode()` function to `library.js`:
+```javascript
+/**
+ * Check if we're in lightweight mode
+ * @returns {boolean} True if in lightweight mode
+ */
+function isLightweightMode() {
+  return state.wtgMode === 'lightweight';
+}
+```
+
+**Files Modified**:
+- `library.js`: Added missing `isLightweightMode()` function after descriptiveMap definition (lines 16-22)
+
+**Impact**:
+- Eliminates runtime error when output or input hooks execute
+- Allows proper mode detection for WTG features
+- Fixes crashes on scenario start
+
+**Backup Created**: `Backup/wtg_2.0_lightweight_1.0.4_missing_function_fix_2025-10-29/`
+
+---
 
 ### Version 1.0.3 (2025-10-14)
 **Feature: Automatic Storycard [settime] Detection at Scenario Start**

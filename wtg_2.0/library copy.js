@@ -14,6 +14,14 @@ const descriptiveMap = new Map([
 ]);
 
 /**
+ * Check if we're in lightweight mode
+ * @returns {boolean} True if in lightweight mode
+ */
+function isLightweightMode() {
+  return state.wtgMode === 'lightweight';
+}
+
+/**
  * Normalize time expressions to standard format
  * @param {string} str - Time string to normalize
  * @returns {string} Normalized time string

@@ -69,7 +69,7 @@ const modifier = (text) => {
   let useLastTTDirectly = false;
   if (history.length > 0) {
     const lastActionText = history[history.length - 1].text;
-    if (lastActionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/)) {
+    if (lastActionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]/)) {
       useLastTTDirectly = true;
     }
   }

@@ -1,9 +1,131 @@
 # WTG 2.0 Lightweight + AutoCards Combined System
 
-## Version: 1.0.4 Combined
-Date: 2025-10-24
+## Version: 1.0.6 Combined
+Date: 2025-10-29
 
 ## Version History
+
+### Version 1.0.6 (2025-10-29)
+**Bug Fix: Back-to-Back Commands Time Addition**
+
+**Issue Fixed**:
+When using two commands back-to-back (e.g., `[sleep]` followed by `[advance]`), the second command was not properly adding time to the first command's result. Instead of accumulating time (e.g., 7h52m + 2h = 9h52m), the second command would reset to just the amount specified (2h03m).
+
+**Root Cause**:
+In `library.js` (line 530) and `context.js` (line 72), the regex patterns used to extract turn time markers from history had a `$` anchor at the end:
+```javascript
+actionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/)
+```
+
+This pattern only matched markers at the very END of the text. However, system messages created by commands in `input.js` have the format:
+```
+[SYSTEM] You go to sleep... [[00y00m00d07h52n00s]]. 
+```
+
+The period and space after `]]` prevented the regex from matching. When the context hook couldn't find the previous command's timestamp, it returned `lastTT = 0`, causing the second command to start from zero instead of accumulating time.
+
+**Solution Implemented**:
+Removed the `$` anchor from both regex patterns:
+```javascript
+// Before:
+actionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]$/)
+
+// After:
+actionText.match(/\[\[(\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s)\]\]/)
+```
+
+This allows the regex to match timestamp markers anywhere in the text, not just at the end, ensuring proper time accumulation across multiple commands.
+
+**Files Modified**:
+- `library.js`: Fixed regex in `getLastTurnTimeAndChars()` function (line 530)
+- `context.js`: Fixed regex in turntime detection (line 72)
+
+**Impact**:
+- Back-to-back commands now properly accumulate time
+- `[sleep]` followed by `[advance]` correctly adds both time amounts
+- Multiple commands in sequence maintain accurate time tracking
+- Time state persists correctly between turns
+
+**Example Before Fix**:
+```
+[settime 08/08/2037 6:00 AM] → 00h00m
+[sleep] → 07h52m
+[advance 2 hours] → 02h03m (WRONG - should be ~09h55m)
+```
+
+**Example After Fix**:
+```
+[settime 08/08/2037 6:00 AM] → 00h00m
+[sleep] → 07h52m
+[advance 2 hours] → 09h52m (CORRECT)
+```
+
+**Backup Created**: `Backup/autocards_wtg_2.0_1.0.6_back_to_back_command_fix_2025-10-29/`
+
+---
+
+### Version 1.0.5 (2025-10-28)
+**Bug Fix: System Message Spacing and Output Duplication**
+
+**Issues Fixed**:
+1. **System Message Spacing**: After using commands like `[sleep]`, `[advance]`, `[settime]`, or `[reset]`, there was no space/newline between the system message and the following AI response, causing text to run together.
+
+2. **Output.js Duplication**: The `output.js` file contained 7 duplicate copies of the same code (entire modifier function repeated), causing the file to be unnecessarily large and potentially introducing bugs.
+
+3. **System Message Punctuation**: All system messages now end with a period after the timestamp marker for proper sentence structure.
+
+**Root Cause**:
+1. In `input.js` (line 164), system messages were joined with `messages.join('\n') + (modifiedText ? '\n' + modifiedText : '')`, which only added a newline if modifiedText existed. Since commands set modifiedText to empty string, no trailing newline was added after system messages.
+
+2. The `output.js` file had been accidentally duplicated multiple times during previous edits, resulting in 7 copies of the same 245-line modifier function.
+
+3. System messages lacked terminal periods, leaving sentences incomplete.
+
+**Solution Implemented**:
+1. **Fixed System Message Spacing**: Updated `input.js` to always add a newline after system messages:
+   ```javascript
+   // Before:
+   modifiedText = messages.join('\n') + (modifiedText ? '\n' + modifiedText : '');
+   
+   // After:
+   modifiedText = messages.join('\n') + '\n' + (modifiedText || '');
+   ```
+   This ensures proper spacing between system messages and the AI's response.
+
+2. **Removed Duplicate Code**: Cleaned up `output.js` by removing 6 duplicate copies, keeping only the single correct version.
+
+3. **Added Terminal Periods**: Updated all system messages to include a period after the `[[timestamp]]` marker:
+   - `[SYSTEM] You go to sleep... [[${ttMarker}]]. `
+   - `[SYSTEM] Advanced X unit... [[${ttMarker}]]. `
+   - `[SYSTEM] Starting date and time set to... [[${ttMarker}]]. `
+   - `[SYSTEM] Date and time reset to... [[${ttMarker}]]. `
+
+**Files Modified**:
+- `input.js`: Fixed system message spacing logic (line 165) and added periods to all system messages (lines 36, 46, 88, 116, 149)
+- `output.js`: Removed duplicate code, reduced from 1717 lines to 245 lines
+
+**Impact**:
+- System messages now have proper spacing before AI responses
+- System messages are now properly punctuated with terminal periods
+- Commands like `[sleep]` and `[advance]` display cleanly with complete sentences
+- File size reduced significantly (output.js now ~14KB instead of ~67KB)
+- Improved code maintainability
+
+**Example Before Fix**:
+```
+[SYSTEM] You go to sleep and wake up later that day on 08/08/2037 at 12:32 PM. [[00y00m00d06h32n00s]]You awaken feeling refreshed...
+```
+
+**Example After Fix**:
+```
+[SYSTEM] You go to sleep and wake up later that day on 08/08/2037 at 12:32 PM. [[00y00m00d06h32n00s]]. 
+
+You awaken feeling refreshed...
+```
+
+**Backup Created**: `Backup/autocards_wtg_2.0_system_message_spacing_fix_2025-10-28/`
+
+---
 
 ### Version 1.0.4 (2025-10-24)
 **Bug Fix: Timestamp Assignment - Keyword Detection**
