@@ -1836,3 +1836,23 @@ function markSettimeAsInitialized() {
     }
   }
 }
+
+/**
+ * Ensure action text starts with a space if it doesn't already
+ * Injects a leading space to actions that don't have one
+ * @param {string} actionText - The action text to process
+ * @returns {string} Action text with leading space ensured
+ */
+function ensureLeadingSpace(actionText) {
+  if (!actionText || typeof actionText !== 'string') {
+    return actionText;
+  }
+  
+  // Check if text already starts with a space
+  if (actionText.charAt(0) === ' ') {
+    return actionText;
+  }
+  
+  // Add leading space
+  return ' ' + actionText;
+}

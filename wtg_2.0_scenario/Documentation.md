@@ -1,9 +1,61 @@
 # WTG 2.0 Scenario Edition - Documentation
 
-## Version: 2.2.5
-Date: 2025-10-29
+## Version: 2.2.6
+Date: 2025-10-30
 
 ## Version History
+
+### Version 2.2.6 (2025-10-30)
+**Feature: Automatic Leading Space Injection**
+
+**New Feature Added**:
+A new utility function `ensureLeadingSpace()` has been added to automatically inject a leading space at the beginning of action text if one isn't already present.
+
+**Purpose**:
+- Ensures consistent formatting of AI responses in scenarios
+- Prevents formatting issues when actions don't naturally start with a space
+- Ensures space is preserved after system messages and commands on following turns
+- Applied to ALL output paths (lightweight mode, normal mode, and system messages)
+
+**Implementation**:
+- **Function Location**: `library copy.js` (end of file)
+- **Function Name**: `ensureLeadingSpace(actionText)`
+- **Integration Points**: `output copy.js` 
+  - Line ~82: Applied to initial settime system message
+  - Line ~168: Applied to lightweight mode output
+  - Line ~574: Applied to normal mode output (before final return)
+- **Logic**: 
+  - Checks if input string is valid (non-null, non-empty, string type)
+  - Returns unchanged if text already starts with space
+  - Prepends single space character if not present
+
+**Technical Details**:
+```javascript
+function ensureLeadingSpace(actionText) {
+  if (!actionText || typeof actionText !== 'string') {
+    return actionText;
+  }
+  if (actionText.charAt(0) === ' ') {
+    return actionText;
+  }
+  return ' ' + actionText;
+}
+```
+
+**Files Modified**:
+- `library copy.js`: Added ensureLeadingSpace() function
+- `output copy.js`: Integrated function call in all output return paths:
+  - System message returns (settime prompt)
+  - Lightweight mode returns
+  - Normal mode returns
+
+**Impact**:
+- All AI responses now consistently start with a leading space
+- Prevents formatting inconsistencies after system messages and commands
+- Ensures proper spacing on turns following command execution
+- Guarantees consistent formatting across all output paths
+
+---
 
 ### Version 2.2.5 (2025-10-29)
 **Bug Fix: Back-to-Back Commands Time Addition**

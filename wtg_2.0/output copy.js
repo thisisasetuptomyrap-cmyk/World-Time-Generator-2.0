@@ -13,7 +13,7 @@ const modifier = (text) => {
 
   // Check if WTG is disabled entirely (Normal mode only)
   if (!isLightweightMode() && getWTGBooleanSetting("Disable WTG Entirely")) {
-    return {text: text};
+    return {text: ensureLeadingSpace(text)};
   }
 
   // Sync settime initialization flag from storycard if not set in state
@@ -79,7 +79,7 @@ const modifier = (text) => {
   // If settime has NOT been initialized and we're at the start, inject the prompt
   if (!hasSettimeBeenInitialized() && state.startingDate === '01/01/1900' && state.startingTime === 'Unknown') {
     modifiedText = ' Please switch to story mode and use the command, [settime mm/dd/yyyy time] to set a custom starting date and time. (eg: [settime 01/01/1900 12:00 am])\n\nTo enable all of the features, use the command [normal]. You can go back to lightweight mode by using the command [light].\n\nLightweight mode is recommended for free users and llama models, as normal mode relies on the model\'s instruction following to generate characters and locations.  \n\nTo report bugs, message me on discord: thedenial. (it has a period at the end of it)';
-    return {text: modifiedText};
+    return {text: ensureLeadingSpace(modifiedText)};
   }
 
   // Update storycard entries for characters detected in the previous turn
@@ -842,6 +842,9 @@ const modifier = (text) => {
   }
 
   delete state.insertMarker;
+
+  // Ensure the modified text starts with a space
+  modifiedText = ensureLeadingSpace(modifiedText);
 
   return {text: modifiedText};
 };
