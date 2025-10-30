@@ -1,9 +1,47 @@
 # WTG 2.0 Lightweight Documentation
 
-## Version: 1.0.5
-Date: 2025-10-29
+## Version: 1.0.6
+Date: 2025-10-30
 
 ## Version History
+
+### Version 1.0.6 (2025-10-30)
+**Feature: Automatic Leading Space Injection**
+
+**New Feature Added**:
+A new utility function `ensureLeadingSpace()` has been added to automatically inject a leading space at the beginning of action text if one isn't already present.
+
+**Purpose**:
+- Ensures consistent formatting of AI responses in scenarios
+- Prevents formatting issues when actions don't naturally start with a space
+- Ensures space is preserved after system messages and commands on following turns
+- Applied to ALL output paths (all return statements)
+
+**Implementation**:
+- **Function Location**: `library copy.js` (end of file, lines 949-967)
+- **Function Name**: `ensureLeadingSpace(actionText)`
+- **Integration Points**: `output copy.js` 
+  - Line ~16: Applied when WTG is disabled
+  - Line ~82: Applied to initial settime system message
+  - Line ~268: Applied to final output (before return)
+- **Logic**: 
+  - Checks if input string is valid (non-null, non-empty, string type)
+  - Returns unchanged if text already starts with space
+  - Prepends single space character if not present
+
+**Files Modified**:
+- `library copy.js`: Added ensureLeadingSpace() function
+- `output copy.js`: Integrated function call in all output return paths
+
+**Impact**:
+- All AI responses now consistently start with a leading space
+- Prevents formatting inconsistencies after system messages and commands
+- Ensures proper spacing on turns following command execution
+- Guarantees consistent formatting across all output paths
+
+**Backup Created**: `Backup/wtg_2.0_lightweight_1.0.6_leading_space_injection_2025-10-30/`
+
+---
 
 ### Version 1.0.5 (2025-10-29)
 **Bug Fix: Back-to-Back Commands Time Addition**

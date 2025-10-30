@@ -1,9 +1,46 @@
 # WTG 2.0 Lightweight + AutoCards Combined System
 
-## Version: 1.0.6 Combined
-Date: 2025-10-29
+## Version: 1.0.7 Combined
+Date: 2025-10-30
 
 ## Version History
+
+### Version 1.0.7 (2025-10-30)
+**Feature: Automatic Leading Space Injection**
+
+**New Feature Added**:
+A new utility function `ensureLeadingSpace()` has been added to automatically inject a leading space at the beginning of action text if one isn't already present.
+
+**Purpose**:
+- Ensures consistent formatting of AI responses in scenarios
+- Prevents formatting issues when actions don't naturally start with a space
+- Ensures space is preserved after system messages and commands on following turns
+- Applied to ALL output paths (all return statements)
+
+**Implementation**:
+- **Function Location**: `library.js` (WTG section, lines 893-911, before AutoCards)
+- **Function Name**: `ensureLeadingSpace(actionText)`
+- **Integration Points**: `output.js` 
+  - Line ~59: Applied to initial settime system message
+  - Line ~242: Applied to final output (after AutoCards processing)
+- **Logic**: 
+  - Checks if input string is valid (non-null, non-empty, string type)
+  - Returns unchanged if text already starts with space
+  - Prepends single space character if not present
+
+**Files Modified**:
+- `library.js`: Added ensureLeadingSpace() function
+- `output.js`: Integrated function call in all output return paths
+
+**Impact**:
+- All AI responses now consistently start with a leading space
+- Prevents formatting inconsistencies after system messages and commands
+- Ensures proper spacing on turns following command execution
+- Works seamlessly with AutoCards processing
+
+**Backup Created**: `Backup/autocards+wtg_2.0_1.0.7_leading_space_injection_2025-10-30/`
+
+---
 
 ### Version 1.0.6 (2025-10-29)
 **Bug Fix: Back-to-Back Commands Time Addition**
