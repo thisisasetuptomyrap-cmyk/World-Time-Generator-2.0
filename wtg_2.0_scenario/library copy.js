@@ -231,7 +231,7 @@ function getCurrentTimeFromHistory(currentOutput = '', useHistory = false) {
  */
 function parseTurnTime(str) {
   const match = str.match(/(\d{2})y(\d{2})m(\d{2})d(\d{2})h(\d{2})n(\d{2})s/);
-  if (!match) return null;
+  if (!match) return {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
   return {
     years: parseInt(match[1]),
     months: parseInt(match[2]),
@@ -286,6 +286,7 @@ function addToTurnTime(tt, add) {
  * @returns {Object} Object with currentDate and currentTime
  */
 function computeCurrent(startingDate, startingTime, tt) {
+  tt = tt || {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
   if (startingTime === 'Unknown') {
     let approxDays = (tt.years || 0) * 365 + (tt.months || 0) * 30 + (tt.days || 0);
     let currentDate = advanceDate(startingDate, approxDays);
