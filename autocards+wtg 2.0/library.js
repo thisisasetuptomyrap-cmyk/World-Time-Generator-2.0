@@ -518,9 +518,32 @@ function getDateDiff(startStr, startTimeStr, endStr, endTimeStr) {
 }
 
 /**
+ * Get the most recent timestamp from the WTG Data storycard
+ * @returns {Object|null} Turn time object or null if not found
+ */
+function getLastTimestampFromWTGData() {
+  const dataCard = getWTGDataCard();
+  if (!dataCard || !dataCard.entry) return null;
+
+  // Lightweight format (used in autocards+wtg)
+  const turnDataRegex = /\[Turn Data\]\nAction Type: (.*?)\nAction Text: (.*?)\nResponse Text: (.*?)\nTimestamp: (.*?)\n\[\/Turn Data\]/gs;
+  const matches = [...dataCard.entry.matchAll(turnDataRegex)];
+
+  if (matches.length > 0) {
+    const lastMatch = matches[matches.length - 1];
+    const timestamp = lastMatch[4];
+    if (timestamp && timestamp.match(/\d{2}y\d{2}m\d{2}d\d{2}h\d{2}n\d{2}s/)) {
+      return parseTurnTime(timestamp);
+    }
+  }
+
+  return null;
+}
+
+/**
  * Get last turn time and character count from history
  * @param {Array} history - History array
- * @returns {Object} Object with lastTT and charsAfter
+ * @returns {Object} Object with lastTT, charsAfter, and found (whether a marker was found)
  */
 function getLastTurnTimeAndChars(history) {
   let lastTT = {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
@@ -537,10 +560,17 @@ function getLastTurnTimeAndChars(history) {
       charsAfter += actionText.length;
     }
   }
+
+  // If no marker found in history, try to get timestamp from WTG Data storycard
   if (!found) {
+    const wtgDataTimestamp = getLastTimestampFromWTGData();
+    if (wtgDataTimestamp) {
+      lastTT = wtgDataTimestamp;
+      found = true;
+    }
     charsAfter = history.reduce((sum, action) => sum + action.text.length, 0);
   }
-  return {lastTT, charsAfter};
+  return {lastTT, charsAfter, found};
 }
 
 /**

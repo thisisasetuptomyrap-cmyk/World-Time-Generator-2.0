@@ -60,7 +60,7 @@ const modifier = (text) => {
   const similarity2 = calculateKeywordSimilarity(secondLastKeywords, currentKeywords);
 
   // Get character count from history for time adjustment
-  const {lastTT, charsAfter} = getLastTurnTimeAndChars(history);
+  const {lastTT, charsAfter, found: markerFound} = getLastTurnTimeAndChars(history);
 
   // Check if lastTT came from the most recent action (which would be from a user command)
   // If the last action has [[turntime]], we should use it directly without adding more time
@@ -81,7 +81,8 @@ const modifier = (text) => {
     state.currentDate = currentDate;
     state.currentTime = currentTime;
     state.changed = true;
-  } else {
+  } else if (markerFound) {
+    // A marker was found in history - use it as the base for time calculation
     // Calculate additional minutes based on character count (fixed rate: 1 minute per 700 characters)
     additionalMinutes = Math.floor(charsAfter / 700);
 
@@ -102,16 +103,37 @@ const modifier = (text) => {
     // Update turn time
     if (additionalMinutes > 0) {
       state.turnTime = addToTurnTime(lastTT, {minutes: additionalMinutes});
-      const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
-      state.currentDate = currentDate;
-      state.currentTime = currentTime;
       state.changed = true;
     } else {
       state.turnTime = lastTT;
-      const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
-      state.currentDate = currentDate;
-      state.currentTime = currentTime;
     }
+    const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+    state.currentDate = currentDate;
+    state.currentTime = currentTime;
+  } else {
+    // No marker found in history - preserve existing state.turnTime
+    // Only add time based on character count if we have a valid starting time
+    if (state.turnTime && state.startingTime !== 'Unknown') {
+      additionalMinutes = Math.floor(charsAfter / 700);
+
+      // Apply dynamic time if enabled
+      if (getWTGBooleanSetting("Enable Dynamic Time")) {
+        if (similarity1 > 0.3 || similarity2 > 0.3) {
+          additionalMinutes = Math.max(1, Math.floor(additionalMinutes * 0.7));
+        } else if (similarity1 < 0.1 && similarity2 < 0.1) {
+          additionalMinutes = Math.floor(additionalMinutes * 1.3);
+        }
+      }
+
+      if (additionalMinutes > 0) {
+        state.turnTime = addToTurnTime(state.turnTime, {minutes: additionalMinutes});
+        const {currentDate, currentTime} = computeCurrent(state.startingDate || '01/01/1900', state.startingTime || 'Unknown', state.turnTime);
+        state.currentDate = currentDate;
+        state.currentTime = currentTime;
+        state.changed = true;
+      }
+    }
+    // If state.turnTime doesn't exist, leave currentDate/currentTime unchanged
   }
 
   // Clean up WTG Data card by removing entries with timestamps higher than current turn time
