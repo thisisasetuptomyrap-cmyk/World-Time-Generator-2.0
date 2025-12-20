@@ -184,6 +184,13 @@ const modifier = (text) => {
         .replace(/\s{2,}/g, ' ')
         .trim();
     }
+  } else {
+    // When Dynamic Time is OFF, always strip any (sleep ...) or (advance ...) commands
+    // since they shouldn't appear at all - the AI may still output them incorrectly
+    modifiedText = modifiedText
+      .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   // Process any existing turn time marker in the text
