@@ -791,8 +791,10 @@ function getWTGSettingsCard() {
     settingsCard.type = "system";
     settingsCard.keys = ""; // No keys - not included in AI context
     settingsCard.description = "World Time Generator Settings - Edit the values below to configure the system.";
-    settingsCard.entry = `Enable Dynamic Time: false
-Debug Mode: false`;
+    settingsCard.entry = `Time Duration Multiplier: 1.0
+Enable Dynamic Time: false
+Debug Mode: false
+Disable WTG Entirely: false`;
   } else {
     // Ensure keys are always empty
     settingsCard.keys = "";
@@ -911,6 +913,23 @@ function getWTGBooleanSetting(settingName) {
 }
 
 /**
+ * Get the time duration multiplier from the WTG Settings card
+ * @returns {number} The time multiplier value (default 1.0)
+ */
+function getTimeMultiplier() {
+  const settingsCard = getWTGSettingsCard();
+  if (!settingsCard || !settingsCard.entry) return 1.0;
+
+  const regex = /Time Duration Multiplier:\s*([\d.]+)/i;
+  const match = settingsCard.entry.match(regex);
+  if (match) {
+    const value = parseFloat(match[1]);
+    return isNaN(value) ? 1.0 : value;
+  }
+  return 1.0;
+}
+
+/**
  * Get dynamic time factor based on turn content analysis
  * @param {string} turnText - Text from player input and AI response
  * @returns {number} Time factor (0.7 for quick turns, 1.3 for long turns, 1.0 for medium/default)
@@ -951,10 +970,11 @@ function hasSettimeBeenInitialized() {
 
 /**
  * Mark settime as initialized in both state and WTG Data storycard
+ * Also creates the WTG Settings storycard for user configuration
  */
 function markSettimeAsInitialized() {
   state.settimeInitialized = true;
-  
+
   const dataCard = getWTGDataCard();
   if (dataCard) {
     if (!dataCard.entry) {
@@ -963,6 +983,9 @@ function markSettimeAsInitialized() {
       dataCard.entry = '[SETTIME_INITIALIZED]\n' + dataCard.entry;
     }
   }
+
+  // Create the WTG Settings storycard for user configuration
+  getWTGSettingsCard();
 }
 
 // ====================================================================================

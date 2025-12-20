@@ -4,6 +4,11 @@ const modifier = (text) => {
   // Ensure state.turnTime is always initialized
   state.turnTime = state.turnTime || {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
 
+  // Check if WTG is disabled entirely
+  if (getWTGBooleanSetting("Disable WTG Entirely")) {
+    return {text: text};
+  }
+
   let modifiedText = text;
 
   // Get turn data from WTG Data storycard
@@ -83,8 +88,9 @@ const modifier = (text) => {
     state.changed = true;
   } else if (markerFound) {
     // A marker was found in history - use it as the base for time calculation
-    // Calculate additional minutes based on character count (fixed rate: 1 minute per 700 characters)
-    additionalMinutes = Math.floor(charsAfter / 700);
+    // Calculate additional minutes based on character count (base rate: 1 minute per 700 characters)
+    const timeMultiplier = getTimeMultiplier();
+    additionalMinutes = Math.floor((charsAfter / 700) * timeMultiplier);
 
     // Apply dynamic time if enabled
     if (getWTGBooleanSetting("Enable Dynamic Time")) {
@@ -114,7 +120,8 @@ const modifier = (text) => {
     // No marker found in history - preserve existing state.turnTime
     // Only add time based on character count if we have a valid starting time
     if (state.turnTime && state.startingTime !== 'Unknown') {
-      additionalMinutes = Math.floor(charsAfter / 700);
+      const timeMultiplier = getTimeMultiplier();
+      additionalMinutes = Math.floor((charsAfter / 700) * timeMultiplier);
 
       // Apply dynamic time if enabled
       if (getWTGBooleanSetting("Enable Dynamic Time")) {

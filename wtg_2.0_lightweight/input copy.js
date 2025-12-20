@@ -4,6 +4,11 @@ const modifier = (text) => {
   // Ensure state.turnTime is always initialized
   state.turnTime = state.turnTime || {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
 
+  // Check if WTG is disabled entirely
+  if (getWTGBooleanSetting("Disable WTG Entirely")) {
+    return {text: text};
+  }
+
   // Initialize state if not present
   if (state.startingDate === undefined) {
     state.startingDate = '01/01/1900';

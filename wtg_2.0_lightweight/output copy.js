@@ -11,8 +11,8 @@ const modifier = (text) => {
 
   let modifiedText = text;
 
-  // Check if WTG is disabled entirely (Normal mode only)
-  if (!isLightweightMode() && getWTGBooleanSetting("Disable WTG Entirely")) {
+  // Check if WTG is disabled entirely
+  if (getWTGBooleanSetting("Disable WTG Entirely")) {
     return {text: ensureLeadingSpace(text)};
   }
 

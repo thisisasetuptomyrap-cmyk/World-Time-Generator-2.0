@@ -783,8 +783,10 @@ function getWTGSettingsCard() {
     settingsCard.type = "system";
     settingsCard.keys = ""; // No keys - not included in AI context
     settingsCard.description = "World Time Generator Settings - Edit the values below to configure the system.";
-    settingsCard.entry = `Enable Dynamic Time: false
-Debug Mode: false`;
+    settingsCard.entry = `Time Duration Multiplier: 1.0
+Enable Dynamic Time: false
+Debug Mode: false
+Disable WTG Entirely: false`;
   } else {
     // Ensure keys are always empty
     settingsCard.keys = "";
@@ -900,6 +902,34 @@ function getWTGBooleanSetting(settingName) {
   const regex = new RegExp(`${settingName}:\\s*(true|false)`, 'i');
   const match = settingsCard.entry.match(regex);
   return match ? match[1].toLowerCase() === 'true' : false;
+}
+
+/**
+ * Get the time duration multiplier from the WTG Settings card
+ * @returns {number} The time multiplier value (default 1.0)
+ */
+function getTimeMultiplier() {
+  const settingsCard = getWTGSettingsCard();
+  if (!settingsCard || !settingsCard.entry) return 1.0;
+
+  const regex = /Time Duration Multiplier:\s*([\d.]+)/i;
+  const match = settingsCard.entry.match(regex);
+  if (match) {
+    const value = parseFloat(match[1]);
+    return isNaN(value) ? 1.0 : value;
+  }
+  return 1.0;
+}
+
+/**
+ * Mark settime as initialized in state
+ * Also creates the WTG Settings storycard for user configuration
+ */
+function markSettimeAsInitialized() {
+  state.settimeInitialized = true;
+
+  // Create the WTG Settings storycard for user configuration
+  getWTGSettingsCard();
 }
 
 /**

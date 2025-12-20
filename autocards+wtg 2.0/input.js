@@ -6,6 +6,13 @@ const modifier = (text) => {
   // Ensure state.turnTime is always initialized
   state.turnTime = state.turnTime || {years:0, months:0, days:0, hours:0, minutes:0, seconds:0};
 
+  // Check if WTG is disabled entirely
+  if (getWTGBooleanSetting("Disable WTG Entirely")) {
+    // Still process AutoCards even if WTG is disabled
+    let modifiedText = AutoCards("input", text);
+    return {text: modifiedText};
+  }
+
   // Initialize state if not present
   if (state.startingDate === undefined) {
     state.startingDate = '01/01/1900';
@@ -86,6 +93,8 @@ const modifier = (text) => {
 
             const ttMarker = formatTurnTime(state.turnTime);
             messages.push(`[SYSTEM] Starting date and time set to ${state.startingDate} ${state.startingTime}. [[${ttMarker}]]. `);
+            // Mark settime as initialized and create WTG Settings card
+            markSettimeAsInitialized();
             state.insertMarker = true;
             state.changed = true;
           } else {

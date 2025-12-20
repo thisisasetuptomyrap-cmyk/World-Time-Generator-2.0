@@ -8,6 +8,12 @@ const modifier = (text) => {
 
   let modifiedText = text;
 
+  // Check if WTG is disabled entirely - still process AutoCards
+  if (getWTGBooleanSetting("Disable WTG Entirely")) {
+    modifiedText = AutoCards("output", modifiedText);
+    return {text: ensureLeadingSpace(modifiedText)};
+  }
+
   // Check for [settime] command in storycards at scenario start
   if (state.startingDate === '01/01/1900' && info.actionCount <= 1) {
     // Scan all storycards for [settime] commands
