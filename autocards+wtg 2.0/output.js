@@ -159,7 +159,7 @@ const modifier = (text) => {
     if (shouldRemoveAllCommands) {
       modifiedText = modifiedText
         .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
-        .replace(/\s{2,}/g, ' ')
+        .replace(/ {2,}/g, ' ')
         .trim();
     }
   } else {
@@ -167,7 +167,7 @@ const modifier = (text) => {
     // since they shouldn't appear at all - the AI may still output them incorrectly
     modifiedText = modifiedText
       .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
-      .replace(/\s{2,}/g, ' ')
+      .replace(/ {2,}/g, ' ')
       .trim();
   }
 

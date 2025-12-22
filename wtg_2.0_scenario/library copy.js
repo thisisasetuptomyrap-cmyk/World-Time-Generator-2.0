@@ -452,8 +452,12 @@ function getLastTurnTimeAndChars(history) {
     if (wtgDataTimestamp) {
       lastTT = wtgDataTimestamp;
       found = true;
+      // Only count last action's chars when recovered from WTG Data
+      charsAfter = history.length > 0 ? history[history.length - 1].text.length : 0;
+    } else {
+      // Only use cumulative when no timestamp source exists
+      charsAfter = history.reduce((sum, action) => sum + action.text.length, 0);
     }
-    charsAfter = history.reduce((sum, action) => sum + action.text.length, 0);
   }
   return {lastTT, charsAfter, found};
 }

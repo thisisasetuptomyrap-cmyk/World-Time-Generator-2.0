@@ -542,7 +542,7 @@ const modifier = (text) => {
   if (shouldRemoveAllCommands) {
     modifiedText = modifiedText
       .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
-      .replace(/\s{2,}/g, ' ')
+      .replace(/ {2,}/g, ' ')
       .trim();
   }
 

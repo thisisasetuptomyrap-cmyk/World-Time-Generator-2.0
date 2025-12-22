@@ -508,7 +508,7 @@ const modifier = (text) => {
     // including malformed ones like (sleep 00y00m00d00h00n03s)
     modifiedText = modifiedText
       .replace(/\((?:sleep|advance)[^)]*\)/gi, '')
-      .replace(/\s{2,}/g, ' ')
+      .replace(/ {2,}/g, ' ')
       .trim();
   }
 
