@@ -100,8 +100,11 @@ const modifier = (text) => {
 
     state.insertMarker = (charsAfter >= 7000);
 
-    // Add current date and time to context
-    const dateTimeInjection = `\nCurrent date: ${state.currentDate}; Current time: ${state.currentTime}`;
+    // Add current date and time to context (only if settime has been initialized)
+    let dateTimeInjection = '';
+    if (state.settimeInitialized && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+      dateTimeInjection = `\nCurrent date: ${state.currentDate}; Current time: ${state.currentTime}`;
+    }
 
     return {text: modifiedText + dateTimeInjection};
   }
@@ -338,9 +341,12 @@ ${sleepInstruction} ${advanceInstruction}
 </scratchpad>`;
   }
 
-  
-  // Add current date and time to context
-  const dateTimeInjection = `\nCurrent date: ${state.currentDate}; Current time: ${state.currentTime}`;
+
+  // Add current date and time to context (only if settime has been initialized)
+  let dateTimeInjection = '';
+  if (state.settimeInitialized && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+    dateTimeInjection = `\nCurrent date: ${state.currentDate}; Current time: ${state.currentTime}`;
+  }
 
   return {text: modifiedText + instructions + dateTimeInjection};
 };
