@@ -129,7 +129,7 @@ const modifier = (text) => {
   modifiedText = narrative;
 
     // Add timestamps to existing storycards that don't have them
-    if (lastAction && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+    if (hasSettimeBeenInitialized()) {
       const dateTimeCard = storyCards.find(card => card.title === "Current Date and Time");
       if (dateTimeCard) {
         addTimestampToCard(dateTimeCard, `${state.currentDate} ${state.currentTime}`);
@@ -141,7 +141,11 @@ const modifier = (text) => {
       for (let i = 0; i < storyCards.length; i++) {
         const card = storyCards[i];
         // Skip system cards
-        if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns") {
+        if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns" || card.title === "WTG Exclusions") {
+          continue;
+        }
+        // Process [e] marker - removes marker and adds card to exclusions list
+        if (processExclusionMarker(card)) {
           continue;
         }
         // Add timestamp only if card doesn't have one AND its keywords are mentioned in the text
@@ -545,13 +549,17 @@ const modifier = (text) => {
   state.currentTurnTriggers = [];
 
   // Add timestamps to storycards whose keywords are mentioned
-  if (lastAction && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+  if (hasSettimeBeenInitialized()) {
     // Combine the player's action and AI's output for keyword detection
     const combinedText = (lastAction ? lastAction.text : '') + ' ' + modifiedText;
 
     for (let i = 0; i < storyCards.length; i++) {
       const card = storyCards[i];
-      if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns") {
+      if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns" || card.title === "WTG Exclusions") {
+        continue;
+      }
+      // Process [e] marker - removes marker and adds card to exclusions list
+      if (processExclusionMarker(card)) {
         continue;
       }
       // Add timestamp only if card doesn't have one AND its keywords are mentioned in the text

@@ -649,8 +649,13 @@ function updateDateTimeCard() {
  * @param {string} timestamp - Timestamp to add
  */
 function addTimestampToCard(card, timestamp) {
-  // Don't add timestamps if we're still using default date/time (01/01/1900 Unknown)
-  if (timestamp && (timestamp.includes("01/01/1900") || timestamp.includes("Unknown"))) {
+  // Check if card is excluded from timestamp injection
+  if (card && card.title && isCardExcluded(card.title)) {
+    return;
+  }
+
+  // Don't add timestamps if time hasn't been set (Unknown)
+  if (timestamp && timestamp.includes("Unknown")) {
     return;
   }
 
@@ -665,6 +670,13 @@ function addTimestampToCard(card, timestamp) {
       discoveryVerb = "Visited";
     }
 
+    // Check for custom placement marker /]
+    if (card.entry.includes('/]')) {
+      card.entry = card.entry.replace('/]', `${discoveryVerb} ${timestamp}`);
+      return;
+    }
+
+    // Default: append at end with blank line separator
     card.entry += `\n\n${discoveryVerb} ${timestamp}`;
   }
 }
@@ -820,6 +832,77 @@ function getCooldownCard() {
     cooldownCard.description = "Internal cooldown tracking for AI commands; no keys; not included in context";
   }
   return cooldownCard;
+}
+
+/**
+ * Get or create WTG Exclusions storycard
+ * @returns {Object} WTG Exclusions storycard
+ */
+function getWTGExclusionsCard() {
+  let exclusionsCard = storyCards.find(card => card.title === "WTG Exclusions");
+  if (!exclusionsCard) {
+    addStoryCard("WTG Exclusions");
+    exclusionsCard = storyCards.find(card => card.title === "WTG Exclusions");
+    if (exclusionsCard) {
+      exclusionsCard.type = "system";
+      exclusionsCard.keys = "";
+      exclusionsCard.entry = "";
+      exclusionsCard.description = "Cards excluded from WTG timestamp injection";
+    }
+  }
+  return exclusionsCard;
+}
+
+/**
+ * Check if a storycard is excluded from timestamp injection
+ * @param {string} cardTitle - Title of the card to check
+ * @returns {boolean} True if card is excluded
+ */
+function isCardExcluded(cardTitle) {
+  if (!cardTitle) return false;
+  const exclusionsCard = getWTGExclusionsCard();
+  if (!exclusionsCard || !exclusionsCard.entry) return false;
+
+  const lowerTitle = cardTitle.toLowerCase();
+  const exclusionRegex = /\[Exclusion\]\nCard Title: (.*?)\n\[\/Exclusion\]/gs;
+  const matches = [...exclusionsCard.entry.matchAll(exclusionRegex)];
+
+  return matches.some(match => match[1].toLowerCase() === lowerTitle);
+}
+
+/**
+ * Add a storycard to the exclusions list
+ * @param {string} cardTitle - Title of the card to exclude
+ */
+function addCardToExclusions(cardTitle) {
+  if (!cardTitle || isCardExcluded(cardTitle)) return;
+
+  const exclusionsCard = getWTGExclusionsCard();
+  const exclusionEntry = `[Exclusion]\nCard Title: ${cardTitle}\n[/Exclusion]`;
+
+  if (exclusionsCard.entry) {
+    exclusionsCard.entry += '\n\n' + exclusionEntry;
+  } else {
+    exclusionsCard.entry = exclusionEntry;
+  }
+}
+
+/**
+ * Process exclusion marker [e] in a storycard
+ * @param {Object} card - Storycard to process
+ * @returns {boolean} True if exclusion marker was found and processed
+ */
+function processExclusionMarker(card) {
+  if (!card || !card.entry) return false;
+
+  if (!card.entry.match(/\[e\]/i)) return false;
+
+  // Remove [e] and /] markers
+  card.entry = card.entry.replace(/\[e\]/gi, '').trim();
+  card.entry = card.entry.replace(/\/\]/g, '').trim();
+
+  addCardToExclusions(card.title);
+  return true;
 }
 
 /**

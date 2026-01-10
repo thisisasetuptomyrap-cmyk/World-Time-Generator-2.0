@@ -618,7 +618,7 @@ const modifier = (text) => {
 
   // Collect trigger mentions for turn data (only after proper time is set)
   let triggerMentions = [];
-  if (modifiedText.trim() && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+  if (modifiedText.trim() && hasSettimeBeenInitialized()) {
     const responseText = modifiedText.toLowerCase();
 
     // Check all storycards for trigger matches in AI response
@@ -800,6 +800,18 @@ const modifier = (text) => {
     const fullText = (lastAction ? lastAction.text : '') + ' ' + text;
     const recentHistoryText = history.slice(-5).map(h => h.text).join(' '); // Last 5 actions
     const scanText = fullText + ' ' + recentHistoryText;
+
+    // Process exclusion markers [e] on all storycards
+    for (const card of storyCards) {
+      // Skip system cards
+      if (card.title === "WTG Data" || card.title === "Current Date and Time" ||
+          card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns" ||
+          card.title === "WTG Exclusions") {
+        continue;
+      }
+      // Process [e] marker - removes marker and adds card to exclusions list
+      processExclusionMarker(card);
+    }
 
     // Get existing character cards that don't have timestamps
     const existingCharacterCards = storyCards.filter(c => c.type === "character" && c.title && !hasTimestamp(c));

@@ -231,7 +231,7 @@ const modifier = (text) => {
   modifiedText = narrative;
 
   // Add timestamps to existing storycards that don't have them
-  if (lastAction && state.currentDate !== '01/01/1900' && state.currentTime !== 'Unknown') {
+  if (hasSettimeBeenInitialized()) {
     // Update timestamp for Current Date and Time card
     const dateTimeCard = storyCards.find(card => card.title === "Current Date and Time");
     if (dateTimeCard) {
@@ -244,9 +244,14 @@ const modifier = (text) => {
     // Add timestamps to storycards that don't have them but whose keywords were mentioned
     for (let i = 0; i < storyCards.length; i++) {
       const card = storyCards[i];
-      
+
       // Skip system cards
-      if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns") {
+      if (card.title === "WTG Data" || card.title === "Current Date and Time" || card.title === "World Time Generator Settings" || card.title === "WTG Cooldowns" || card.title === "WTG Exclusions") {
+        continue;
+      }
+
+      // Process [e] marker - removes marker and adds card to exclusions list
+      if (processExclusionMarker(card)) {
         continue;
       }
 
