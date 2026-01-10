@@ -2,7 +2,7 @@
 
 > Advanced time tracking and entity management system for AI Dungeon scenarios
 
-# Latest version: 2.1.23
+# Latest version: 2.1.24
 
 Now with automatic storycard [settime] detection! Pre-configure your scenario's starting time without requiring players to manually enter commands by simply putting the [settime] command in any storycard within your scenario. The command will automatically be removed from the storycard.
 
@@ -10,6 +10,7 @@ Now with automatic storycard [settime] detection! Pre-configure your scenario's 
 
 - [Overview](#overview)
 - [System Commands](#system-commands)
+- [Storycard Markers](#storycard-markers)
 - [Which Version Should I Use?](#which-version-should-i-use)
 - [WTG 2.0 (Full Version)](#wtg-20-full-version)
 - [WTG 2.0 Lightweight](#wtg-20-lightweight)
@@ -150,6 +151,64 @@ These commands:
 
 ---
 
+## Storycard Markers
+
+These markers can be placed inside storycard entries to control timestamp behavior.
+
+### `[e]` - Exclusion Marker
+
+**Exclude a storycard from timestamp injection**
+
+Add `[e]` anywhere in a storycard's entry to permanently exclude it from receiving timestamps. The marker is removed when processed, and the card is added to a "WTG Exclusions" system storycard.
+
+**Usage:**
+```
+Card Title: Important NPC
+Keys: npc, character
+Entry: This character should never have timestamps. [e]
+```
+
+**Result:**
+- The `[e]` marker is removed from the entry
+- Card title is added to WTG Exclusions
+- No timestamps will ever be injected into this card
+
+**Notes:**
+- Case insensitive (`[e]` and `[E]` both work)
+- Multiple `[e]` markers are all removed
+- If combined with `/]`, the exclusion takes precedence
+
+---
+
+### `/]` - Custom Timestamp Placement
+
+**Control where timestamps are inserted**
+
+Add `/]` anywhere in a storycard's entry to specify where the timestamp should be inserted. The timestamp will be placed directly before `/]` (without a blank line), and the marker is removed after insertion.
+
+**Usage:**
+```
+Card Title: Marcus the Warrior
+Keys: marcus, warrior
+Entry: A grizzled veteran with battle scars./]
+
+Additional notes that should appear after the timestamp.
+```
+
+**Result (after timestamp injection):**
+```
+A grizzled veteran with battle scars.Met on 06/15/2023 8:00 AM
+
+Additional notes that should appear after the timestamp.
+```
+
+**Notes:**
+- If no `/]` marker is present, timestamps are appended at the end with a blank line separator (default behavior)
+- The `/]` marker is removed after the timestamp is inserted
+- Useful for keeping additional notes or formatting below the timestamp
+
+---
+
 ## Which Version Should I Use?
 
 **Overview**
@@ -208,7 +267,7 @@ The Scenario version is just a convient way for mobile users to switch between e
 
 ## WTG 2.0 (Full Version)
 
-**Current Version**: 2.1.23
+**Current Version**: 2.1.24
 
 ### Features
 
